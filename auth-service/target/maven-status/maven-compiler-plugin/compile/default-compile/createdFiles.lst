@@ -1,0 +1,6 @@
+org\sncrwanda\auth\AuthApplication.class
+org\sncrwanda\auth\config\OpenApiConfig.class
+org\sncrwanda\auth\web\TokenResponse.class
+org\sncrwanda\auth\web\AuthController.class
+org\sncrwanda\auth\web\GlobalExceptionHandler.class
+org\sncrwanda\auth\web\LoginRequest.class

@@ -1,0 +1,4 @@
+org\sncrwanda\reporting\ReportingApplication.class
+org\sncrwanda\reporting\web\GlobalExceptionHandler.class
+org\sncrwanda\reporting\web\ReportController.class
+org\sncrwanda\reporting\config\OpenApiConfig.class

@@ -1,0 +1,7 @@
+org\sncrwanda\ledger\repo\TransactionRepo.class
+org\sncrwanda\ledger\LedgerApplication.class
+org\sncrwanda\ledger\domain\Transaction.class
+org\sncrwanda\ledger\domain\Transaction$TxType.class
+org\sncrwanda\ledger\web\GlobalExceptionHandler.class
+org\sncrwanda\ledger\web\TransactionController.class
+org\sncrwanda\ledger\config\OpenApiConfig.class

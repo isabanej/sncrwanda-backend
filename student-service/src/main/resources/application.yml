@@ -1,0 +1,20 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: student-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=students
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

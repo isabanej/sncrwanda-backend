@@ -1,0 +1,6 @@
+org\sncrwanda\hr\HrApplication.class
+org\sncrwanda\hr\web\EmployeeController.class
+org\sncrwanda\hr\config\OpenApiConfig.class
+org\sncrwanda\hr\web\GlobalExceptionHandler.class
+org\sncrwanda\hr\repo\EmployeeRepo.class
+org\sncrwanda\hr\domain\Employee.class

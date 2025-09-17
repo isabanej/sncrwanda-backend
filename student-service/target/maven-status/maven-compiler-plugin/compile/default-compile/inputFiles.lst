@@ -1,0 +1,9 @@
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\config\OpenApiConfig.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\Guardian.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\Need.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\Student.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\repo\GuardianRepo.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\repo\StudentRepo.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\StudentApplication.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\web\GlobalExceptionHandler.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\web\StudentController.java

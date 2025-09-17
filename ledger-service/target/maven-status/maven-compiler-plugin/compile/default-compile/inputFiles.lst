@@ -1,0 +1,6 @@
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\config\OpenApiConfig.java
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\domain\Transaction.java
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\LedgerApplication.java
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\repo\TransactionRepo.java
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\web\GlobalExceptionHandler.java
+C:\dev\sncrwanda-backend\ledger-service\src\main\java\org\sncrwanda\ledger\web\TransactionController.java

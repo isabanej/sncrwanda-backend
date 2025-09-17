@@ -1,0 +1,9 @@
+org\sncrwanda\student\config\OpenApiConfig.class
+org\sncrwanda\student\web\StudentController.class
+org\sncrwanda\student\repo\GuardianRepo.class
+org\sncrwanda\student\domain\Need.class
+org\sncrwanda\student\repo\StudentRepo.class
+org\sncrwanda\student\domain\Student.class
+org\sncrwanda\student\web\GlobalExceptionHandler.class
+org\sncrwanda\student\domain\Guardian.class
+org\sncrwanda\student\StudentApplication.class

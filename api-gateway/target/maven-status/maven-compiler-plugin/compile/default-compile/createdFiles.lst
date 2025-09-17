@@ -1,0 +1,4 @@
+org\sncrwanda\gateway\config\OpenApiConfig.class
+org\sncrwanda\gateway\web\DocsController.class
+org\sncrwanda\gateway\ApiGatewayApplication.class
+org\sncrwanda\gateway\web\GlobalExceptionHandler.class
