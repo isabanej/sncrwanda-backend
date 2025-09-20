@@ -1,0 +1,30 @@
+# Root gitignore for sncrwanda-backend
+
+# Java / Maven
+**/target/
+*.class
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# IDE / Editor
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env/config
+.env
+.env.*
+
+# Docker
+**/.docker/
