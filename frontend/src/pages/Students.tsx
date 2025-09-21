@@ -53,6 +53,9 @@ const Students: React.FC = () => {
   const [hobbyQuery, setHobbyQuery] = useState('')
   const [hobbyActive, setHobbyActive] = useState(-1)
   const hobbyInputRef = useRef<HTMLInputElement | null>(null)
+  const hobbyPopoverRef = useRef<HTMLDivElement | null>(null)
+  const hobbyToggleRef = useRef<HTMLButtonElement | null>(null)
+  const [popularHobbies, setPopularHobbies] = useState<string[]>([])
 
   const [editingId, setEditingId] = useState<UUID | null>(null)
   const [form, setForm] = useState({
@@ -315,8 +318,10 @@ const Students: React.FC = () => {
     students.forEach(s => parseHobbies(s.hobbies).forEach(h => set.add(h)))
     // Include current form content as well
     parseHobbies(form.hobbies).forEach(h => set.add(h))
+    // Include server-suggested popular hobbies
+    popularHobbies.forEach(h => set.add(h))
     return Array.from(set).sort((a, b) => a.localeCompare(b))
-  }, [students, form.hobbies])
+  }, [students, form.hobbies, popularHobbies])
 
   const filteredHobbySuggestions = useMemo(() => {
     const q = hobbyQuery.trim().toLowerCase()
@@ -337,6 +342,74 @@ const Students: React.FC = () => {
     setForm(f => ({ ...f, hobbies: next.join('\n') }))
     setHobbyOpen(false); setHobbyQuery(''); setHobbyActive(-1)
   }
+
+  function removeHobby(h: string) {
+    const list = parseHobbies(form.hobbies)
+    const next = list.filter(x => x.toLowerCase() !== h.toLowerCase())
+    setForm(f => ({ ...f, hobbies: next.join('\n') }))
+  }
+
+  // --- Popular hobbies: fetch and persist top N ---
+  useEffect(() => {
+    let on = true
+    async function loadPopular() {
+      try {
+        const list = await api.get<string[]>('/students/hobbies/popular', token)
+        if (on && Array.isArray(list)) setPopularHobbies(list)
+      } catch {
+        // fallback to localStorage
+        try {
+          const raw = localStorage.getItem('popularHobbies')
+          if (raw && on) setPopularHobbies(JSON.parse(raw))
+        } catch {}
+      }
+    }
+    loadPopular()
+    return () => { on = false }
+  }, [token])
+
+  function computeTopNHobbiesFromStudents(N: number): string[] {
+    const counts = new Map<string, number>()
+    const addOne = (x: string) => counts.set(x, (counts.get(x) || 0) + 1)
+    students.forEach(s => parseHobbies(s.hobbies).forEach(addOne))
+    parseHobbies(form.hobbies).forEach(addOne)
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, N)
+      .map(([h]) => h)
+  }
+
+  async function persistPopularHobbies() {
+    const top = computeTopNHobbiesFromStudents(10)
+    try {
+      await api.post<void>('/students/hobbies/popular', { hobbies: top }, token)
+    } catch {
+      try { localStorage.setItem('popularHobbies', JSON.stringify(top)) } catch {}
+    }
+  }
+
+  // After adding a hobby, try persisting popular
+  useEffect(() => {
+    if (!hobbyOpen) {
+      // debounce a bit
+      const t = setTimeout(() => { persistPopularHobbies() }, 500)
+      return () => clearTimeout(t)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.hobbies])
+
+  // Close hobby popover on outside click
+  useEffect(() => {
+    if (!hobbyOpen) return
+    function onDocDown(e: MouseEvent) {
+      const target = e.target as HTMLElement
+      const inPopover = hobbyPopoverRef.current?.contains(target)
+      const inToggle = hobbyToggleRef.current?.contains(target)
+      if (!inPopover && !inToggle) setHobbyOpen(false)
+    }
+    document.addEventListener('mousedown', onDocDown)
+    return () => document.removeEventListener('mousedown', onDocDown)
+  }, [hobbyOpen])
 
   function toggleNeed(opt: string) {
     setForm(f => {
@@ -468,6 +541,7 @@ const Students: React.FC = () => {
                   <label htmlFor="hobbies">Hobbies</label>
                   <button
                     type="button"
+                    ref={hobbyToggleRef}
                     className="btn btn-secondary btn-sm"
                     aria-haspopup="dialog"
                     aria-expanded={hobbyOpen}
@@ -481,11 +555,33 @@ const Students: React.FC = () => {
                     Add
                   </button>
                 </div>
-                <textarea id="hobbies" name="hobbies" rows={4} value={form.hobbies} onChange={onChange}
+
+                {/* Chips representation of hobbies */}
+                {parseHobbies(form.hobbies).length > 0 && (
+                  <div className="chips" role="list">
+                    {parseHobbies(form.hobbies).map(h => (
+                      <span role="listitem" key={h} className="chip">
+                        {h}
+                        <button type="button" className="chip-x" aria-label={`Remove ${h}`} onClick={() => removeHobby(h)}>
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Keep textarea hidden as the backing store */}
+                <textarea id="hobbies" name="hobbies" value={form.hobbies} onChange={onChange}
                           onBlur={e => onBlurField('hobbies', e.target.value)} placeholder="Optional"
-                          aria-invalid={!!fieldErrors.hobbies} aria-describedby={fieldErrors.hobbies ? 'student-hobbies-error' : undefined} />
+                          aria-invalid={!!fieldErrors.hobbies} aria-describedby={fieldErrors.hobbies ? 'student-hobbies-error' : undefined}
+                          style={{ display: 'none' }} />
+
                 {hobbyOpen && (
-                  <div className="dropdown-panel hobby-popover" role="dialog" aria-label="Add hobby">
+                  <div ref={hobbyPopoverRef} className="dropdown-panel hobby-popover" role="dialog" aria-label="Add hobby">
+                    <div className="popover-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>
+                      <strong style={{ fontSize: '.9rem', color: 'var(--title)' }}>Add hobby</strong>
+                      <button type="button" className="chip-x" aria-label="Close" onClick={() => setHobbyOpen(false)}>×</button>
+                    </div>
                     <div style={{ padding: 8, display: 'grid', gap: 6 }}>
                       <input
                         ref={hobbyInputRef}
