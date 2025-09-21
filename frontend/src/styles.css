@@ -193,6 +193,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 .combo-item { width: 100%; text-align: left; padding: 8px 10px; border: 0; background: transparent; cursor: pointer; border-radius: 8px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #0f172a; }
 .combo-item:hover, .combo-item:focus, .combo-item.active { background: var(--surface-muted); outline: none; color: #0b1220; }
 
+/* Small button */
+.btn-sm { padding: .3rem .55rem; font-size: .85rem; border-radius: 8px; }
+
+/* Hobbies popover */
+.hobby-popover { inset: auto auto 0 0; width: 280px; }
+
 /* Needs checklist grid */
 .checklist-grid { display: grid; grid-template-columns: repeat(2, auto 1fr); align-items: center; column-gap: 8px; row-gap: 4px; }
 @media (max-width: 720px) { .checklist-grid { grid-template-columns: auto 1fr; } }

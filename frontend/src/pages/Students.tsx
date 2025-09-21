@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { DatePicker } from '../lib/ui/DatePicker'
 import { api, ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -48,6 +48,11 @@ const Students: React.FC = () => {
   const [guardianOpen, setGuardianOpen] = useState(false)
   const [guardiansBusy, setGuardiansBusy] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number>(-1)
+  // Hobbies popover state
+  const [hobbyOpen, setHobbyOpen] = useState(false)
+  const [hobbyQuery, setHobbyQuery] = useState('')
+  const [hobbyActive, setHobbyActive] = useState(-1)
+  const hobbyInputRef = useRef<HTMLInputElement | null>(null)
 
   const [editingId, setEditingId] = useState<UUID | null>(null)
   const [form, setForm] = useState({
@@ -296,6 +301,43 @@ const Students: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // --- Hobbies helpers ---
+  function parseHobbies(text: string | undefined | null): string[] {
+    if (!text) return []
+    return text
+      .split(/\r?\n|,/)
+      .map(t => t.trim())
+      .filter(Boolean)
+  }
+
+  const existingHobbies = useMemo(() => {
+    const set = new Set<string>()
+    students.forEach(s => parseHobbies(s.hobbies).forEach(h => set.add(h)))
+    // Include current form content as well
+    parseHobbies(form.hobbies).forEach(h => set.add(h))
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [students, form.hobbies])
+
+  const filteredHobbySuggestions = useMemo(() => {
+    const q = hobbyQuery.trim().toLowerCase()
+    const current = new Set(parseHobbies(form.hobbies).map(h => h.toLowerCase()))
+    const list = q
+      ? existingHobbies.filter(h => h.toLowerCase().includes(q))
+      : existingHobbies.slice()
+    return list.filter(h => !current.has(h.toLowerCase())).slice(0, 8)
+  }, [existingHobbies, hobbyQuery, form.hobbies])
+
+  function addHobby(h: string) {
+    const val = (h || '').trim()
+    if (!val) return
+    const current = parseHobbies(form.hobbies)
+    const has = current.some(x => x.toLowerCase() === val.toLowerCase())
+    if (has) { setHobbyOpen(false); setHobbyQuery(''); setHobbyActive(-1); return }
+    const next = current.length ? [...current, val] : [val]
+    setForm(f => ({ ...f, hobbies: next.join('\n') }))
+    setHobbyOpen(false); setHobbyQuery(''); setHobbyActive(-1)
+  }
+
   function toggleNeed(opt: string) {
     setForm(f => {
       const has = f.needs.includes(opt)
@@ -421,11 +463,79 @@ const Students: React.FC = () => {
                 />
                 {fieldErrors.childDob && <div id="student-childDob-error" className="error" role="alert">{fieldErrors.childDob}</div>}
               </div>
-              <div className="field">
-                <label htmlFor="hobbies">Hobbies</label>
+              <div className="field" style={{ position: 'relative' }}>
+                <div className="hobby-toolbar" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                  <label htmlFor="hobbies">Hobbies</label>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    aria-haspopup="dialog"
+                    aria-expanded={hobbyOpen}
+                    onClick={() => {
+                      setHobbyOpen(o => !o)
+                      setHobbyQuery('')
+                      setHobbyActive(-1)
+                      setTimeout(() => hobbyInputRef.current?.focus(), 0)
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
                 <textarea id="hobbies" name="hobbies" rows={4} value={form.hobbies} onChange={onChange}
                           onBlur={e => onBlurField('hobbies', e.target.value)} placeholder="Optional"
                           aria-invalid={!!fieldErrors.hobbies} aria-describedby={fieldErrors.hobbies ? 'student-hobbies-error' : undefined} />
+                {hobbyOpen && (
+                  <div className="dropdown-panel hobby-popover" role="dialog" aria-label="Add hobby">
+                    <div style={{ padding: 8, display: 'grid', gap: 6 }}>
+                      <input
+                        ref={hobbyInputRef}
+                        aria-label="New hobby"
+                        placeholder="Type or choose…"
+                        value={hobbyQuery}
+                        onChange={e => { setHobbyQuery(e.target.value); setHobbyActive(-1) }}
+                        onKeyDown={e => {
+                          const n = filteredHobbySuggestions.length
+                          if (e.key === 'ArrowDown' && n > 0) { e.preventDefault(); setHobbyActive(i => (i + 1) % n); return }
+                          if (e.key === 'ArrowUp' && n > 0) { e.preventDefault(); setHobbyActive(i => (i <= 0 ? n - 1 : i - 1)); return }
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            if (hobbyActive >= 0 && hobbyActive < n) addHobby(filteredHobbySuggestions[hobbyActive])
+                            else addHobby(hobbyQuery)
+                            return
+                          }
+                          if (e.key === 'Escape') { setHobbyOpen(false); return }
+                        }}
+                      />
+                      {filteredHobbySuggestions.length > 0 && (
+                        <ul className="combo-list" role="listbox" style={{ marginTop: 0 }}>
+                          {filteredHobbySuggestions.map((h, idx) => (
+                            <li key={h}>
+                              <button
+                                type="button"
+                                role="option"
+                                aria-selected={idx === hobbyActive}
+                                className={`combo-item${idx===hobbyActive ? ' active' : ''}`}
+                                title={h}
+                                onMouseDown={(e) => { e.preventDefault(); addHobby(h) }}
+                                onMouseEnter={() => setHobbyActive(idx)}
+                              >
+                                {h}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {hobbyQuery.trim() && (
+                        <button type="button" className="btn btn-primary" onClick={() => addHobby(hobbyQuery)}>
+                          Add "{hobbyQuery.trim()}"
+                        </button>
+                      )}
+                      {!hobbyQuery.trim() && filteredHobbySuggestions.length === 0 && (
+                        <div className="helper">Type a new hobby or pick from existing.</div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {fieldErrors.hobbies && <div id="student-hobbies-error" className="error" role="alert">{fieldErrors.hobbies}</div>}
               </div>
             </div>
