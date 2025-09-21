@@ -388,6 +388,27 @@ const Students: React.FC = () => {
     }
   }
 
+  // Frequency map for heat coloring
+  const hobbyCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    const addOne = (x: string) => counts.set(x, (counts.get(x) || 0) + 1)
+    students.forEach(s => parseHobbies(s.hobbies).forEach(addOne))
+    // include current form hobbies (weight 1)
+    parseHobbies(form.hobbies).forEach(addOne)
+    // include popularHobbies lightly (weight 1)
+    popularHobbies.forEach(addOne)
+    return counts
+  }, [students, form.hobbies, popularHobbies])
+
+  function chipHeat(hobby: string): number {
+    const c = hobbyCounts.get(hobby) || 0
+    if (c >= 15) return 5
+    if (c >= 8) return 4
+    if (c >= 4) return 3
+    if (c >= 2) return 2
+    return 1
+  }
+
   // After adding a hobby, try persisting popular
   useEffect(() => {
     if (!hobbyOpen) {
@@ -560,7 +581,7 @@ const Students: React.FC = () => {
                 {parseHobbies(form.hobbies).length > 0 && (
                   <div className="chips" role="list">
                     {parseHobbies(form.hobbies).map(h => (
-                      <span role="listitem" key={h} className="chip">
+                      <span role="listitem" key={h} className={`chip chip-heat-${chipHeat(h)}`} title={`Used ${hobbyCounts.get(h) || 1} time(s)`}>
                         {h}
                         <button type="button" className="chip-x" aria-label={`Remove ${h}`} onClick={() => removeHobby(h)}>
                           ×
