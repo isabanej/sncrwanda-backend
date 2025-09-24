@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { validateStudent, validateStudentField } from '../lib/validation'
 import { MSG } from '../lib/messages'
 import { Icon } from '../components/Icon'
+import { resolveGuardianSearch } from '../lib/guardianSearch'
 
 type UUID = string
 
@@ -704,66 +705,33 @@ const Students: React.FC = () => {
     const prev = lastGuardianQueryRef.current
     const isShrink = prev && prev.length > q.length && prev.startsWith(q)
     lastGuardianQueryRef.current = q
-
-    // Preload all guardians once when entering edit mode (q empty) if cache empty
-    if (isEditDialogEdit(editDialog) && !q && Object.keys(guardiansCacheRef.current).length === 0) {
-      ;(async () => {
-        try {
-          const base = await api.get<Guardian[]>('/students/guardians', token).catch(async () => {
-            try { return await api.get<Guardian[]>('/_student/students/guardians', token) } catch { return [] as Guardian[] }
-          })
-          for (const g of base) guardiansCacheRef.current[g.id] = g
-          if (active && isEditDialogEdit(editDialog) && lastGuardianQueryRef.current === '') {
-            setGuardians(base.sort((a,b)=>a.fullName.localeCompare(b.fullName)))
-          }
-        } catch (e) { try { console.warn('[GuardianPreload] failed', e) } catch {} }
-      })()
-    }
-
-    // If user is deleting characters (query shrinks) and we already have a cache, perform client-side
-    // filtering only. This prevents an empty server response from temporarily clearing prior matches.
-    if (isShrink) {
-      try { console.log('[GuardianSearch] shrink query', { prev, q, cache: Object.keys(guardiansCacheRef.current).length }) } catch {}
-      const cached = Object.values(guardiansCacheRef.current)
-      const filtered = q
-        ? cached.filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
-        : cached // show all cached (initial fetch) when cleared
-      if (active) setGuardians(filtered)
-      return () => { active = false }
-    }
     ;(async () => {
+      if (!isEditDialogEdit(editDialog)) return
       setEditGuardiansBusy(true)
       try {
-        try { console.log('[GuardianSearch] fetch', { q }) } catch {}
-        const url = q ? `/students/guardians?q=${encodeURIComponent(q)}` : '/students/guardians'
-        const fallbackUrl = q ? `/_student/students/guardians?q=${encodeURIComponent(q)}` : '/_student/students/guardians'
-        let list = await api.get<Guardian[]>(url, token).catch(async (e: any) => {
-          if (e instanceof ApiError) {
-            if (e.status === 404) return [] as Guardian[]
-            if ([0, 502, 503, 504].includes(e.status)) {
-              try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
+        const fetcher = async (query: string) => {
+          const url = query ? `/students/guardians?q=${encodeURIComponent(query)}` : '/students/guardians'
+          const fallbackUrl = query ? `/_student/students/guardians?q=${encodeURIComponent(query)}` : '/_student/students/guardians'
+          const list = await api.get<Guardian[]>(url, token).catch(async (e: any) => {
+            if (e instanceof ApiError) {
+              if (e.status === 404) return [] as Guardian[]
+              if ([0, 502, 503, 504].includes(e.status)) {
+                try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
+              }
             }
-          }
-          try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
+            try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
+          })
+          return list
+        }
+        const result = await resolveGuardianSearch({
+          prevQuery: prev,
+          nextQuery: q,
+            cache: guardiansCacheRef.current,
+            fetcher,
+            preload: true
         })
-        // Merge into cache (dedupe by id) BEFORE applying empty-response fallback
-        for (const g of list) guardiansCacheRef.current[g.id] = g
-
-        // If server returned empty for a non-empty query, attempt cached filtering.
-        if (q && list.length === 0) {
-          const cachedFiltered = Object
-            .values(guardiansCacheRef.current)
-            .filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
-          if (cachedFiltered.length > 0) list = cachedFiltered
-        }
-
-        // Sort by name for consistency (stable UX) when we have results.
-        if (list.length > 1) {
-          list = [...list].sort((a, b) => a.fullName.localeCompare(b.fullName))
-        }
-
-        if (active) setGuardians(list)
-        try { console.log('[GuardianSearch] result', { q, list: list.map(g=>g.fullName) }) } catch {}
+  if (active) setGuardians(result.list as any)
+        try { console.log('[GuardianSearch] result', { q, reason: result.reason, list: result.list.map(g => g.fullName) }) } catch {}
       } finally { setEditGuardiansBusy(false) }
     })()
     return () => { active = false }
