@@ -58,27 +58,23 @@ const Students: React.FC = () => {
   }>(null)
 
   // Modal dialog for delete/restore confirmation, and legacy edit structure (edit body is currently disabled)
-  const [editDialog, setEditDialog] = useState<null | (
-    | {
-        mode: 'edit'
-        id: UUID
-        form: { childName: string; childDob: string; hobbies: string; needs: string[]; needsOtherText: string; guardianId: UUID | ''; guardianName: string }
-        errors: { childName?: string; childDob?: string; guardianId?: string }
-        busy?: boolean
-      }
-    | {
-        mode: 'delete' | 'restore'
-        id: UUID
-        form: { childName: string; childDob: string }
-        errors: {}
-        busy?: boolean
-      }
-  )>(null)
+  type EditFormFull = { childName: string; childDob: string; hobbies: string; needs: string[]; needsOtherText: string; guardianId: UUID | ''; guardianName: string }
+  type EditFormMinimal = { childName: string; childDob: string }
+  type EditDialogEdit = { mode: 'edit'; id: UUID; form: EditFormFull; errors: { childName?: string; childDob?: string; guardianId?: string }; busy?: boolean }
+  type EditDialogOther = { mode: 'delete' | 'restore'; id: UUID; form: EditFormMinimal; errors: {}; busy?: boolean }
+  type EditDialogState = EditDialogEdit | EditDialogOther
+  const [editDialog, setEditDialog] = useState<EditDialogState | null>(null)
+
+  function isEditDialogEdit(d: EditDialogState | null): d is EditDialogEdit {
+    return !!d && d.mode === 'edit'
+  }
   const [editGuardianOpen, setEditGuardianOpen] = useState(false)
   const [editGuardianActiveIndex, setEditGuardianActiveIndex] = useState(-1)
   const [editGuardiansBusy, setEditGuardiansBusy] = useState(false)
   // Cache all guardians we've seen during this modal session to allow reverse typing (backspacing)
   const guardiansCacheRef = React.useRef<Record<string, Guardian>>({})
+  // Track last guardian search query to enable direction-aware (growth vs shrink) behavior
+  const lastGuardianQueryRef = React.useRef('')
 
   const [filter, setFilter] = useState('')
   const [nameFilter, setNameFilter] = useState('')
@@ -305,12 +301,12 @@ const Students: React.FC = () => {
 
   // When edit modal is open, ensure guardian name reflects the saved guardian once guardians list loads
   useEffect(() => {
-    if (!editDialog || !editDialog.form.guardianId) return
+    if (!isEditDialogEdit(editDialog) || !editDialog.form.guardianId) return
     const g = guardians.find(x => x.id === editDialog.form.guardianId)
     if (g && editDialog.form.guardianName !== g.fullName) {
-      setEditDialog(d => d ? { ...d, form: { ...d.form, guardianName: g.fullName } } : d)
+      setEditDialog(d => isEditDialogEdit(d) ? { ...d, form: { ...d.form, guardianName: g.fullName } } : d)
     }
-  }, [guardians, editDialog?.form.guardianId])
+  }, [guardians, isEditDialogEdit(editDialog) ? editDialog.form.guardianId : ''])
 
   // Debounced guardian search by name; suppress errors and 404
   useEffect(() => {
@@ -566,21 +562,22 @@ const Students: React.FC = () => {
     const value = (raw ?? '').toString()
     setEditDialog(prev => {
       if (!prev) return prev
-      const nextForm = { ...prev.form, [name]: value }
+      if (!isEditDialogEdit(prev)) return prev // only editable in full edit mode
+      const nextForm: EditFormFull = { ...prev.form, [name]: value } as EditFormFull
       if (name === 'guardianName') {
         return { ...prev, form: nextForm }
       }
       let err: string | undefined
       try { err = validateStudentField(name as any, value as any) } catch { err = undefined }
-      return { ...prev, form: nextForm, errors: { ...prev.errors, [name]: err } as any }
+      return { ...prev, form: nextForm, errors: { ...prev.errors, [name]: err } }
     })
   }
 
   function toggleEditNeed(opt: string) {
     setEditDialog(d => {
-      if (!d) return d
+      if (!isEditDialogEdit(d)) return d
       const has = d.form.needs.includes(opt)
-      const next = has ? d.form.needs.filter(x => x !== opt) : [...d.form.needs, opt]
+      const next = has ? d.form.needs.filter((x: string) => x !== opt) : [...d.form.needs, opt]
       const nextOtherText = (opt === 'Other' && !next.includes('Other')) ? '' : d.form.needsOtherText
       return { ...d, form: { ...d.form, needs: next, needsOtherText: nextOtherText } }
     })
@@ -592,8 +589,8 @@ const Students: React.FC = () => {
     if (editDialog.mode !== 'edit') { try { console.warn('Edit submit ignored because mode is', editDialog.mode) } catch {}; return }
     setEditTrace(t => [...t.slice(-20), `CLICK ${(new Date()).toISOString()}`])
     try { console.log('[StudentEdit] Begin submit', { id: editDialog.id, form: editDialog.form }) } catch {}
-    if (!editDialog || editDialog.mode !== 'edit') return
-    const { childName, childDob, hobbies, needs, needsOtherText, guardianId } = editDialog.form
+  if (!isEditDialogEdit(editDialog)) return
+  const { childName, childDob, hobbies, needs, needsOtherText, guardianId } = editDialog.form
     let errName: string | undefined
     let errDob: string | undefined
     let errGuardian: string | undefined
@@ -702,7 +699,22 @@ const Students: React.FC = () => {
   useEffect(() => {
     if (!editDialog) return
     let active = true
-    const q = (editDialog.form.guardianName || '').trim()
+  // guardianName only exists on the extended edit form variant; guard with in-operator
+  const q = (isEditDialogEdit(editDialog) ? editDialog.form.guardianName : '').trim()
+    const prev = lastGuardianQueryRef.current
+    const isShrink = prev && prev.length > q.length && prev.startsWith(q)
+    lastGuardianQueryRef.current = q
+
+    // If user is deleting characters (query shrinks) and we already have a cache, perform client-side
+    // filtering only. This prevents an empty server response from temporarily clearing prior matches.
+    if (isShrink) {
+      const cached = Object.values(guardiansCacheRef.current)
+      const filtered = q
+        ? cached.filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
+        : cached // show all cached (initial fetch) when cleared
+      if (active) setGuardians(filtered)
+      return () => { active = false }
+    }
     ;(async () => {
       setEditGuardiansBusy(true)
       try {
@@ -717,18 +729,27 @@ const Students: React.FC = () => {
           }
           try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
         })
-        // Merge into cache (dedupe by id)
+        // Merge into cache (dedupe by id) BEFORE applying empty-response fallback
         for (const g of list) guardiansCacheRef.current[g.id] = g
-        // If server returned empty but we have a cache and query is substring of cached entries, use cache filter
-        if (list.length === 0 && q) {
-          const cached = Object.values(guardiansCacheRef.current).filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
-          if (cached.length > 0) list = cached
+
+        // If server returned empty for a non-empty query, attempt cached filtering.
+        if (q && list.length === 0) {
+          const cachedFiltered = Object
+            .values(guardiansCacheRef.current)
+            .filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
+          if (cachedFiltered.length > 0) list = cachedFiltered
         }
+
+        // Sort by name for consistency (stable UX) when we have results.
+        if (list.length > 1) {
+          list = [...list].sort((a, b) => a.fullName.localeCompare(b.fullName))
+        }
+
         if (active) setGuardians(list)
       } finally { setEditGuardiansBusy(false) }
     })()
     return () => { active = false }
-  }, [editDialog?.form.guardianName, token])
+  }, [isEditDialogEdit(editDialog) ? editDialog.form.guardianName : '', token])
 
   async function onEditDialogDelete() {
     if (!editDialog) return
@@ -1336,21 +1357,21 @@ const Students: React.FC = () => {
                         aria-label="Guardian"
                         placeholder="Search and select a guardian"
                         autoComplete="off"
-                        value={editDialog.form.guardianName}
+                        value={isEditDialogEdit(editDialog) ? editDialog.form.guardianName : ''}
                         onChange={e => {
                           const v = e.target.value
                           onEditDialogChange('guardianName', v)
                           // Always open and reset selection when user types or deletes
                           setEditGuardianOpen(true)
                           setEditGuardianActiveIndex(-1)
-                          setEditDialog(d => d ? { ...d, form: { ...d.form, guardianId: '' as any } } : d)
+                          setEditDialog(d => isEditDialogEdit(d) ? { ...d, form: { ...d.form, guardianId: '' as any } } : d)
                         }}
                         onFocus={() => setEditGuardianOpen(true)}
                         onBlur={() => {
                           // Delay closing to allow click selection (use setTimeout micro-task)
                           setTimeout(() => setEditGuardianOpen(false), 120)
                           setEditDialog(d => {
-                            if (!d) return d
+                            if (!isEditDialogEdit(d)) return d
                             if (d.form.guardianId) return { ...d, errors: { ...d.errors, guardianId: undefined } }
                             const q = (d.form.guardianName || '').trim().toLowerCase()
                             const match = guardians.find(g => g.fullName.toLowerCase() === q)
@@ -1361,7 +1382,7 @@ const Students: React.FC = () => {
                           })
                         }}
                         onKeyDown={e => {
-                          const q = (editDialog.form.guardianName || '').trim().toLowerCase()
+                          const q = (isEditDialogEdit(editDialog) ? editDialog.form.guardianName : '').trim().toLowerCase()
                           const list = guardians.filter(g => !q || g.fullName.toLowerCase().includes(q))
                           const n = list.length
                           if (e.key === 'ArrowDown') { e.preventDefault(); setEditGuardianOpen(true); if (n>0) setEditGuardianActiveIndex(i => (i+1)%n); return }
@@ -1370,7 +1391,7 @@ const Students: React.FC = () => {
                             if (editGuardianOpen && editGuardianActiveIndex>=0 && editGuardianActiveIndex<n) {
                               e.preventDefault();
                               const g = list[editGuardianActiveIndex]
-                              setEditDialog(d => d ? { ...d, form: { ...d.form, guardianId: g.id, guardianName: g.fullName }, errors: { ...d.errors, guardianId: undefined } } : d)
+                              setEditDialog(d => isEditDialogEdit(d) ? { ...d, form: { ...d.form, guardianId: g.id, guardianName: g.fullName }, errors: { ...d.errors, guardianId: undefined } } : d)
                               setEditGuardianOpen(false)
                             }
                             return
@@ -1380,14 +1401,14 @@ const Students: React.FC = () => {
                         role="combobox"
                         aria-autocomplete="list"
                         aria-expanded={editGuardianOpen}
-                        aria-invalid={!!editDialog.errors.guardianId}
-                        aria-describedby={editDialog.errors.guardianId ? 'es-guardian-error' : undefined}
+                        aria-invalid={isEditDialogEdit(editDialog) && !!editDialog.errors.guardianId}
+                        aria-describedby={isEditDialogEdit(editDialog) && editDialog.errors.guardianId ? 'es-guardian-error' : undefined}
                       />
                       {editGuardianOpen && (
                         <div className="dropdown-panel">
                           {editGuardiansBusy && <div className="helper" style={{ padding: 8 }}>Searching…</div>}
                           {(() => {
-                            const q = (editDialog.form.guardianName || '').trim().toLowerCase()
+                            const q = (isEditDialogEdit(editDialog) ? editDialog.form.guardianName : '').trim().toLowerCase()
                             const list = guardians.filter(g => !q || g.fullName.toLowerCase().includes(q))
                             return list.length > 0 ? (
                               <ul className="combo-list" role="listbox">
@@ -1398,7 +1419,7 @@ const Students: React.FC = () => {
                                       role="option"
                                       aria-selected={idx === editGuardianActiveIndex}
                                       type="button"
-                                      onMouseDown={(e) => { e.preventDefault(); setEditDialog(d => d ? { ...d, form: { ...d.form, guardianId: g.id, guardianName: g.fullName }, errors: { ...d.errors, guardianId: undefined } } : d); setEditGuardianOpen(false) }}
+                                      onMouseDown={(e) => { e.preventDefault(); setEditDialog(d => isEditDialogEdit(d) ? { ...d, form: { ...d.form, guardianId: g.id, guardianName: g.fullName }, errors: { ...d.errors, guardianId: undefined } } : d); setEditGuardianOpen(false) }}
                                       onMouseEnter={() => setEditGuardianActiveIndex(idx)}
                                       className={`combo-item${idx===editGuardianActiveIndex ? ' active' : ''}`}
                                       title={g.fullName}
@@ -1412,7 +1433,7 @@ const Students: React.FC = () => {
                           })()}
                         </div>
                       )}
-                      {editDialog.errors.guardianId && <div id="es-guardian-error" className="error" role="alert">{editDialog.errors.guardianId}</div>}
+                      {isEditDialogEdit(editDialog) && editDialog.errors.guardianId && <div id="es-guardian-error" className="error" role="alert">{editDialog.errors.guardianId}</div>}
                     </div>
                     <div className="field">
                       <label htmlFor="es-childName" className="req">Child name</label>
@@ -1420,7 +1441,7 @@ const Students: React.FC = () => {
          value={editDialog.form.childName}
          onChange={e => onEditDialogChange('childName', e.target.value)}
          onFocus={() => setEditGuardianOpen(false)} />
-                      {editDialog.errors.childName && <div className="error" role="alert">{editDialog.errors.childName}</div>}
+                      {isEditDialogEdit(editDialog) && editDialog.errors.childName && <div className="error" role="alert">{editDialog.errors.childName}</div>}
                     </div>
                     <div className="field">
                       <label htmlFor="es-childDob" className="req">Child date of birth</label>
@@ -1431,14 +1452,14 @@ const Students: React.FC = () => {
                                     }}
                                     keepOpenUntilSelect />
                       </div>
-                      {editDialog.errors.childDob && <div className="error" role="alert">{editDialog.errors.childDob}</div>}
+                      {isEditDialogEdit(editDialog) && editDialog.errors.childDob && <div className="error" role="alert">{editDialog.errors.childDob}</div>}
                     </div>
                   </div>
 
                   <div className="field">
                     <label htmlFor="es-hobbies">Hobbies</label>
                     <textarea id="es-hobbies" name="hobbies" placeholder="Optional (comma or newline separated)"
-                              value={editDialog.form.hobbies}
+                              value={isEditDialogEdit(editDialog) ? editDialog.form.hobbies : ''}
                               onChange={e => onEditDialogChange('hobbies', e.target.value)}
                               onFocus={() => setEditGuardianOpen(false)} />
                   </div>
@@ -1448,19 +1469,19 @@ const Students: React.FC = () => {
                     <div className="checklist-grid">
                       {NEED_OPTIONS.map(opt => (
                         <React.Fragment key={opt}>
-                          <input type="checkbox" checked={editDialog.form.needs.includes(opt)} onChange={() => toggleEditNeed(opt)} />
+                          <input type="checkbox" checked={isEditDialogEdit(editDialog) && editDialog.form.needs.includes(opt)} onChange={() => toggleEditNeed(opt)} />
                           <span className="check-label">{opt}</span>
                         </React.Fragment>
                       ))}
                     </div>
-                    {editDialog.form.needs.includes('Other') && (
+                    {isEditDialogEdit(editDialog) && editDialog.form.needs.includes('Other') && (
                       <div className="check-other">
                         <input
                           id="es-needsOther"
                           name="needsOtherText"
                           aria-label="Other needs"
                           placeholder="Specify other needs"
-                          value={editDialog.form.needsOtherText}
+                          value={isEditDialogEdit(editDialog) ? editDialog.form.needsOtherText : ''}
                           onChange={e => onEditDialogChange('needsOtherText', e.target.value)}
                         />
                       </div>
