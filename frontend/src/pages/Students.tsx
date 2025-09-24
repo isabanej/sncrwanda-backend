@@ -77,6 +77,8 @@ const Students: React.FC = () => {
   const [editGuardianOpen, setEditGuardianOpen] = useState(false)
   const [editGuardianActiveIndex, setEditGuardianActiveIndex] = useState(-1)
   const [editGuardiansBusy, setEditGuardiansBusy] = useState(false)
+  // Cache all guardians we've seen during this modal session to allow reverse typing (backspacing)
+  const guardiansCacheRef = React.useRef<Record<string, Guardian>>({})
 
   const [filter, setFilter] = useState('')
   const [nameFilter, setNameFilter] = useState('')
@@ -715,6 +717,13 @@ const Students: React.FC = () => {
           }
           try { return await api.get<Guardian[]>(fallbackUrl, token) } catch { return [] as Guardian[] }
         })
+        // Merge into cache (dedupe by id)
+        for (const g of list) guardiansCacheRef.current[g.id] = g
+        // If server returned empty but we have a cache and query is substring of cached entries, use cache filter
+        if (list.length === 0 && q) {
+          const cached = Object.values(guardiansCacheRef.current).filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
+          if (cached.length > 0) list = cached
+        }
         if (active) setGuardians(list)
       } finally { setEditGuardiansBusy(false) }
     })()
