@@ -705,9 +705,25 @@ const Students: React.FC = () => {
     const isShrink = prev && prev.length > q.length && prev.startsWith(q)
     lastGuardianQueryRef.current = q
 
+    // Preload all guardians once when entering edit mode (q empty) if cache empty
+    if (isEditDialogEdit(editDialog) && !q && Object.keys(guardiansCacheRef.current).length === 0) {
+      ;(async () => {
+        try {
+          const base = await api.get<Guardian[]>('/students/guardians', token).catch(async () => {
+            try { return await api.get<Guardian[]>('/_student/students/guardians', token) } catch { return [] as Guardian[] }
+          })
+          for (const g of base) guardiansCacheRef.current[g.id] = g
+          if (active && isEditDialogEdit(editDialog) && lastGuardianQueryRef.current === '') {
+            setGuardians(base.sort((a,b)=>a.fullName.localeCompare(b.fullName)))
+          }
+        } catch (e) { try { console.warn('[GuardianPreload] failed', e) } catch {} }
+      })()
+    }
+
     // If user is deleting characters (query shrinks) and we already have a cache, perform client-side
     // filtering only. This prevents an empty server response from temporarily clearing prior matches.
     if (isShrink) {
+      try { console.log('[GuardianSearch] shrink query', { prev, q, cache: Object.keys(guardiansCacheRef.current).length }) } catch {}
       const cached = Object.values(guardiansCacheRef.current)
       const filtered = q
         ? cached.filter(g => g.fullName.toLowerCase().includes(q.toLowerCase()))
@@ -718,6 +734,7 @@ const Students: React.FC = () => {
     ;(async () => {
       setEditGuardiansBusy(true)
       try {
+        try { console.log('[GuardianSearch] fetch', { q }) } catch {}
         const url = q ? `/students/guardians?q=${encodeURIComponent(q)}` : '/students/guardians'
         const fallbackUrl = q ? `/_student/students/guardians?q=${encodeURIComponent(q)}` : '/_student/students/guardians'
         let list = await api.get<Guardian[]>(url, token).catch(async (e: any) => {
@@ -746,6 +763,7 @@ const Students: React.FC = () => {
         }
 
         if (active) setGuardians(list)
+        try { console.log('[GuardianSearch] result', { q, list: list.map(g=>g.fullName) }) } catch {}
       } finally { setEditGuardiansBusy(false) }
     })()
     return () => { active = false }
