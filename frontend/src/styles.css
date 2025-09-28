@@ -54,11 +54,23 @@ body {
 .btn:hover { filter: brightness(1.1); }
 .btn-secondary { background: #eef2ff; color: #1f2937; }
 .btn-cta { background: var(--brand-orange); color: #fff; border-radius: 999px; padding: .55rem 1rem; font-weight: 700; }
+/* Button variants for consistent actions across app */
+.btn-action { display: inline-flex; align-items: center; gap: 6px; }
+.btn-action svg { width: 14px; height: 14px; display: block; }
+/* Pill, outlined look inspired by screenshot */
+.btn-edit { background: #fff; color: var(--blue); border: 1px solid rgba(47,102,243,.6); border-radius: 999px; font-weight: 700; }
+.btn-edit:hover, .btn-edit:focus-visible { background: rgba(47,102,243,.08); border-color: rgba(47,102,243,.75); box-shadow: 0 0 0 3px rgba(47,102,243,.12); outline: none; }
+.btn-danger, .btn-delete { background: #fff; color: var(--danger); border: 1px solid rgba(217,48,37,.6); border-radius: 999px; font-weight: 700; }
+.btn-danger:hover, .btn-delete:hover, .btn-danger:focus-visible, .btn-delete:focus-visible { background: rgba(217,48,37,.08); border-color: rgba(217,48,37,.75); box-shadow: 0 0 0 3px rgba(217,48,37,.12); outline: none; }
 
 .card { background: #ffffff; border: 1px solid var(--border); border-radius: .7rem; padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
 .grid { display: grid; gap: 1rem; }
 .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 720px) { .grid.cols-2 { grid-template-columns: 1fr; } }
+/* Three-column helper used for Employees panels */
+.grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1024px) { .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .grid.cols-3 { grid-template-columns: 1fr; } }
 
 .form { display: grid; gap: .75rem; max-width: 600px; }
 .field { display: grid; gap: .35rem; }
@@ -74,6 +86,89 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: .5rem; border-bottom: 1px solid var(--border); text-align: left; }
 .table th { color: var(--muted); font-weight: 600; }
+.table thead .filter-row th { padding-top: 0; }
+.col-filter { display: grid; gap: 4px; }
+.col-filter .filter-input { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px; }
+.col-filter input { min-height: 30px; padding: .35rem .5rem; border-radius: 6px; }
+.col-filter .btn-icon { width: 28px; height: 28px; }
+
+/* Data-table toolbar like screenshot */
+.table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: .5rem; flex-wrap: wrap; }
+.table-toolbar .toolbar-left { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); }
+.table-toolbar .toolbar-left select { width: auto; min-height: 30px; padding: .25rem .5rem; border-radius: 6px; }
+.table-toolbar .toolbar-right { display: inline-flex; align-items: center; gap: .4rem; margin-left: auto; }
+.table-toolbar .input-search { width: 260px; max-width: 48vw; min-height: 30px; padding: .35rem .55rem; border-radius: 6px; }
+
+/* Icon-only small buttons (blue / red) */
+.btn-icon { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; }
+.btn-icon svg { width: 16px; height: 16px; }
+.btn-icon--blue { background: #337ab7; color: #fff; border-color: #2e6da4; }
+.btn-icon--blue:hover, .btn-icon--blue:focus-visible { filter: brightness(1.06); outline: none; }
+.btn-icon--red { background: #d9534f; color: #fff; border-color: #d43f3a; }
+.btn-icon--red:hover, .btn-icon--red:focus-visible { filter: brightness(1.06); outline: none; }
+
+/* Action column buttons wrapper */
+.action-buttons { display: flex; gap: .4rem; justify-content: flex-end; }
+
+/* Table foot bar: pager left, toggle right */
+.table-footbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .5rem; flex-wrap: wrap; }
+.table-footbar .pager { display: inline-flex; align-items: center; gap: .5rem; }
+
+/* Link-like style for name column to match screenshot */
+.linkish { color: #337ab7; font-weight: 600; }
+.linkish:hover { text-decoration: underline; }
+
+/* --- Dark table theme (scoped) --- */
+/* Apply to a card that wraps the table: <div class="card card--dark"> */
+.card--dark {
+  /* Override palette for this card subtree */
+  --bg: #0b1220;          /* deep navy */
+  --text: #e5e7eb;        /* slate-200 */
+  --muted: #9aa4b2;       /* desaturated slate */
+  --border: #243244;      /* slate-700-ish */
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+.card--dark h2 { color: var(--text); }
+.card--dark .helper { color: var(--muted); }
+
+/* Table lines and header tint */
+.card--dark .table th,
+.card--dark .table td { border-color: var(--border); }
+.card--dark .table th { color: var(--muted); }
+
+/* Inputs in toolbar and filter row */
+.card--dark .table-toolbar .input-search,
+.card--dark .col-filter input {
+  background: #111827;  /* slate-900 */
+  color: var(--text);
+  border-color: #334155; /* slate-700 */
+}
+.card--dark .table-toolbar .input-search::placeholder,
+.card--dark .col-filter input::placeholder { color: #93a4b8; }
+
+/* Secondary buttons (Prev/Next) */
+.card--dark .btn-secondary {
+  background: #334155;   /* slate-700 */
+  color: #e5e7eb;
+  border: 1px solid #475569; /* slate-600 */
+}
+.card--dark .btn-secondary:hover,
+.card--dark .btn-secondary:focus-visible { filter: brightness(1.05); }
+
+/* Link tint for name column */
+.card--dark .linkish { color: #60a5fa; }
+
+/* --- Schedule styles --- */
+.schedule.table { border-collapse: separate; border-spacing: 0; }
+.schedule.table th, .schedule.table td { border: 1px solid var(--border); vertical-align: middle; }
+.schedule .img { width: 64px; height: 64px; background-size: cover; background-position: center; margin: 0 auto; }
+.rounded-circle { border-radius: 50%; }
+.mb-2 { margin-bottom: .5rem; }
+.schedule .schedule-time { color: #f59eae; font-size: .9rem; }
+.text-center { text-align: center; }
+.table-wrap { overflow-x: auto; }
 
 /* Light topbar theme to match sncrwanda.org */
 .topbar-light { background: #f8fffb; border-bottom: 1px solid #e8efe9; position: sticky; top: 0; z-index: 50; }
@@ -195,6 +290,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 
 /* Small button */
 .btn-sm { padding: .3rem .55rem; font-size: .85rem; border-radius: 8px; }
+/* Back-compat alias used in some files */
+.btn-small { padding: .3rem .55rem; font-size: .85rem; border-radius: 8px; }
 
 /* Hobbies popover */
 .hobby-popover { inset: auto auto 0 0; width: 280px; }
@@ -214,6 +311,124 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 .check-label { color: var(--muted); font-weight: 400; line-height: 1.3; font-size: .9rem; }
 .check-other { margin-top: 8px; }
 /* --- End Students form tweaks --- */
+
+/* --- Accessible white checkboxes (for checklist) --- */
+/*
+  LOCKED (Students checklist): Do not change sizing or geometry directly.
+  If you need to adjust, ONLY tweak the CSS variables defined on .checklist-grid below
+  and get UX sign-off. These values are tuned to match the approved screenshots.
+*/
+/* Target only checkboxes inside the checklist grid to avoid global override */
+.checklist-grid {
+  /* Geometry + palette tokens for the small white checkbox */
+  --check-size: 14px;            /* final agreed size */
+  --check-radius: 2px;           /* subtle rounding */
+  --check-border-w: 1px;         /* crisp border width */
+  --check-border: #cbd5e1;       /* default border */
+  --check-border-hover: #94a3b8; /* hover border */
+  --check-blue: #3b82f6;         /* blue used for focus ring + checkmark */
+  --check-focus-ring: rgba(59,130,246,.25);
+  /* Checkmark geometry tuned for the small box */
+  --checkmark-w: 5px;
+  --checkmark-h: 9px;
+  --checkmark-left: 3px;
+  --checkmark-top: -1px;
+}
+.checklist-grid input[type="checkbox"] {
+  appearance: none;
+  width: var(--check-size);
+  height: var(--check-size);
+  display: inline-block;
+  vertical-align: middle;
+  min-height: 0;                /* override global input min-height */
+  padding: 0;                   /* remove extra box space */
+  margin: 0;                    /* keep tight with label */
+  line-height: 0;               /* avoid line-height affecting box */
+  box-sizing: content-box;      /* sizing strictly by width/height */
+  background: #ffffff;               /* white background for clear state */
+  border: var(--check-border-w) solid var(--check-border); /* crisp 1px border at small size */
+  border-radius: var(--check-radius);                      /* subtle rounding */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+  cursor: pointer;
+  position: relative;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.checklist-grid input[type="checkbox"]:hover { border-color: var(--check-border-hover); }
+.checklist-grid input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--check-focus-ring); /* blue-500 focus ring */
+  border-color: var(--check-blue);
+}
+.checklist-grid input[type="checkbox"]:checked {
+  background: #ffffff;               /* keep white box */
+  border-color: var(--check-blue);   /* blue border when checked */
+}
+/* Checkmark */
+.checklist-grid input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: var(--checkmark-left);
+  top: var(--checkmark-top);
+  width: var(--checkmark-w);
+  height: var(--checkmark-h);
+  border: solid var(--check-blue);    /* blue checkmark */
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+/* High-contrast fallback: if prefers-contrast more, make the check darker */
+@media (prefers-contrast: more) {
+  .checklist-grid input[type="checkbox"]:checked::after { border-color: #1f2937; }
+}
+/* Disabled state (if used) */
+.checklist-grid input[type="checkbox"][disabled] {
+  background: #f1f5f9;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: .8;
+}
+
+
+/* --- Modal styles (generic) --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: var(--card, #fff);
+  color: var(--fg, #222);
+  width: min(560px, 92vw);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border: 1px solid var(--line, #ddd);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line, #ddd);
+}
+.modal-body { padding: 12px; }
+.modal-actions {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  border-top: 1px solid var(--line, #ddd);
+}
+.pre-scroll {
+  max-height: 200px;
+  overflow: auto;
+  background: #f8f8f8;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 8px;
+}
 
 /* --- Date picker --- */
 .date-group { position: relative; }
@@ -245,6 +460,90 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 .form-card { overflow: visible; }
 /* --- End date picker --- */
 
+/* --- Small switch (checkbox) --- */
+.switch-sm { position: relative; display: inline-grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px; cursor: pointer; padding: 2px 6px; border-radius: 8px; min-height: 24px;
+  /* shape tokens (overridable by variants) */
+  --switch-w: 56px;
+  --switch-h: 22px;
+  --switch-radius: 999px;
+  --knob-w: 16px;
+  --knob-h: 16px;
+  --knob-radius: 50%;
+}
+.switch-sm input[type="checkbox"] {
+  appearance: none;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  background: linear-gradient(180deg, #f1f5f9 0%, #e5e7eb 100%);
+  border-radius: var(--switch-radius);
+  position: relative;
+  outline: none;
+  border: 1px solid #d1d5db;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.75);
+  cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease;
+  overflow: hidden; /* ensure knob never spills outside track */
+}
+/* Track label (ON/OFF) */
+.switch-sm input[type="checkbox"]::before {
+  content: 'OFF';
+  position: absolute;
+  left: 6px;            /* near left edge when OFF (opposite the knob) */
+  top: 50%;
+  transform: translateY(-50%);
+  height: auto;
+  width: auto;          /* auto-size to text */
+  padding: 0 4px;       /* a little breathing room */
+  color: #334155;       /* dark in OFF state */
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: .2px;
+  user-select: none;
+  pointer-events: none;
+}
+/* Knob */
+.switch-sm input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--switch-w) - var(--knob-w) - 2px);  /* default OFF: right */
+  width: var(--knob-w);
+  height: var(--knob-h);
+  background: linear-gradient(180deg, #ffffff 0%, #eef2f7 100%);
+  border-radius: var(--knob-radius);
+  box-shadow: 0 6px 12px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.9);
+  transform: translateY(-50%);
+  transition: left .18s ease, top .18s ease, transform .18s ease;
+}
+.switch-sm input[type="checkbox"]:checked {
+  background: radial-gradient(90px 40px at 22% 35%, rgba(255,255,255,.22), rgba(255,255,255,0)) , linear-gradient(180deg, #38d46d 0%, #1fb655 100%);
+  border-color: #16a34a;
+}
+.switch-sm input[type="checkbox"]:checked::before {
+  content: 'ON';
+  left: auto;
+  right: 6px;           /* near right edge when ON (opposite the knob) */
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  padding: 0 4px;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,.2);
+}
+.switch-sm input[type="checkbox"]:checked::after { left: 2px; }  /* knob on LEFT when ON */
+
+/* --- Shape variants --- */
+.switch-rounded { --switch-radius: 10px; --knob-radius: 8px; }
+.switch-square { --switch-radius: 4px; --knob-radius: 4px; }
+/* Slider knob: rectangular with grooves */
+.switch-slider { --knob-w: 26px; --knob-h: calc(var(--switch-h) - 4px); --knob-radius: 6px; }
+.switch-slider input[type="checkbox"]::after {
+  background-image: linear-gradient(180deg, #ffffff 0%, #eef2f7 100%), repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0, rgba(0,0,0,.08) 1px, transparent 1px, transparent 3px);
+  background-blend-mode: normal;
+}
+.switch-sm .label { font-size: .9rem; color: #334155; font-weight: 700; line-height: 1; }
+
 /* Calendar selects */
 .cal-select { appearance: none; background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; padding: 4px 8px; font-weight: 700; color: var(--title); }
 .cal-select:focus { outline: 2px solid #93c5fd; outline-offset: 2px; }
@@ -269,6 +568,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
 .btn-black:disabled { opacity: .7; }
 .btn-lg { padding: 1rem 1rem; font-size: 1rem; }
 .w-100 { width: 100%; }
+
+/* (Removed guardians-toolbar responsive centering) */
 .text-center { text-align: center; }
 .muted { color: #6b7280; }
 .link { color: #2563eb; text-decoration: none; font-weight: 700; }

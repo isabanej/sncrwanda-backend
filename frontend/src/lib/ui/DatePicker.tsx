@@ -10,6 +10,10 @@ type Props = {
   required?: boolean
   // If true, do not auto-close when user types a valid date; only close when a day button is clicked or Escape pressed.
   keepOpenUntilSelect?: boolean
+  // When true, do not limit the selectable date range (DOB and similar)
+  unbounded?: boolean
+  // When provided, controls the initial calendar month/year to show when no value is selected
+  defaultViewDate?: Date
   'aria-invalid'?: boolean
   'aria-describedby'?: string
 }
@@ -30,20 +34,21 @@ function parseISODate(s?: string | null): Date | null {
 // Monday-first header labels to match cheatsheet look (Mon-Sun)
 const WEEKDAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
 
-export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur, placeholder = 'YYYY-MM-DD', required, keepOpenUntilSelect = false, ...aria }) => {
+export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur, placeholder = 'YYYY-MM-DD', required, keepOpenUntilSelect = false, unbounded = false, defaultViewDate, ...aria }) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
   const selected = useMemo(() => parseISODate(value), [value])
   const today = useMemo(() => new Date(), [])
-  // Date range: [minDate, maxDate]
-  const maxDate = useMemo(() => new Date(today.getFullYear() - 4, today.getMonth(), today.getDate()), [today])
-  const minDate = useMemo(() => new Date(today.getFullYear() - 15, today.getMonth(), today.getDate()), [today])
+  // Date range: [minDate, maxDate]; when unbounded, use wide sentinel range
+  const maxDate = useMemo(() => unbounded ? new Date(2100, 11, 31) : new Date(today.getFullYear() - 4, today.getMonth(), today.getDate()), [today, unbounded])
+  const minDate = useMemo(() => unbounded ? new Date(1900, 0, 1) : new Date(today.getFullYear() - 15, today.getMonth(), today.getDate()), [today, unbounded])
   const [open, setOpen] = useState(false)
-  // Default view to cutoff month if no selection, to reduce back-clicks
-  const [view, setView] = useState<Date>(() => selected || new Date(maxDate.getFullYear(), maxDate.getMonth(), 1))
+  // Default view month/year prioritizes selected date, otherwise provided defaultViewDate, otherwise anchor to today
+  const initialView = selected || defaultViewDate || new Date()
+  const [view, setView] = useState<Date>(() => new Date(initialView.getFullYear(), initialView.getMonth(), 1))
   // Keyboard navigation cursor (focused day)
-  const [cursor, setCursor] = useState<Date>(() => selected ? new Date(selected) : new Date(maxDate))
+  const [cursor, setCursor] = useState<Date>(() => selected ? new Date(selected) : new Date(initialView))
 
   useEffect(() => { if (selected) { setView(new Date(selected.getFullYear(), selected.getMonth(), 1)); setCursor(new Date(selected)) } }, [selected])
 

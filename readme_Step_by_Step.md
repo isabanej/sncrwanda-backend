@@ -10,6 +10,7 @@ This guide explains how to build and run the sncrwanda-backend multi-module Spri
 - **Maven 3.6+**
 - **PostgreSQL** (if your services require a running database)
 - **Docker & Docker Compose** (if you want to run with containers)
+- **Git** (for version control)
 
 ---
 
@@ -20,31 +21,90 @@ If you haven’t already:
 1. Go to https://github.com/ and sign in (or create an account).
 2. Click the **+** icon (top right) and select **New repository**.
 3. Enter a repository name (e.g., `sncrwanda-backend`), set visibility, and click **Create repository**.
-4. On the new repo page, copy the HTTPS URL (e.g., `https://github.com/your-username/sncrwanda-backend.git`).
+4. On the new repo page, copy the HTTPS URL (e.g., `https://github.com/isabanej/sncrwanda-backend.git`).
 
 Then, in your terminal:
 ```sh
-git clone https://github.com/your-username/sncrwanda-backend.git
+git clone https://github.com/isabanej/sncrwanda-backend.git
 cd sncrwanda-backend
 ```
 
 ---
 
-## 3. Build All Modules
+## 3. Database Setup: Automated Schema Creation
+
+By default, the project uses a PostgreSQL database named `sncrwanda` and a separate schema for each service (e.g., `hr`, `ledger`, `student`, `reporting`, `auth`).
+
+### A. Automated Schema Creation
+
+Schema creation is now automated using the `init-schemas.sql` script in the `deploy/` directory. This script is mounted into the PostgreSQL container and will create all required schemas automatically when the database is first created.
+
+You do not need to manually create schemas for each service.
+
+### B. Update Service Configuration
+
+In each service's `src/main/resources/application.yml`, set the correct schema in the datasource URL. For example:
+
+- For hr-service:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=hr
+      username: postgres
+      password: postgres
+  ```
+- For ledger-service:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=ledger
+      username: postgres
+      password: postgres
+  ```
+- For student-service:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=student
+      username: postgres
+      password: postgres
+  ```
+- For reporting-service:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=reporting
+      username: postgres
+      password: postgres
+  ```
+- For auth-service:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=auth
+      username: postgres
+      password: postgres
+  ```
+
+### C. Recreate the Database
+
+After updating docker-compose and service configurations, remove the old database volume and start fresh:
+
+```sh
+cd deploy
+docker-compose down -v
+docker-compose up --build
+```
+
+---
+
+## 4. Build All Modules
 
 From the root of the project:
 ```sh
 mvn clean package -DskipTests
 ```
 This will build all modules and create JAR files in each module’s `target/` directory.
-
----
-
-## 4. Configure Environment
-
-- Check each service’s `src/main/resources/application.yml` for database and port settings.
-- Make sure PostgreSQL is running and accessible with the credentials specified in your configs.
-- If using Docker Compose, review `deploy/docker-compose.yml` and update environment variables as needed.
 
 ---
 
@@ -68,7 +128,7 @@ mvn spring-boot:run
 ```
 For example:
 ```sh
-cd auth-service
+cd hr-service
 mvn spring-boot:run
 ```
 Repeat for `api-gateway`, `hr-service`, `ledger-service`, `student-service`, and `reporting-service`.

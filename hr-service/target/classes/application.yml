@@ -1,10 +1,10 @@
 server:
-  port: 8083
+  port: 9094
 spring:
   application:
     name: hr-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=hr
+    url: jdbc:postgresql://postgres:5432/sncrwanda?currentSchema=hr
     username: postgres
     password: postgres
   jpa:
@@ -12,9 +12,21 @@ spring:
       ddl-auto: update
     properties:
       hibernate.format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # The hr schema may already contain objects created outside Flyway on first run.
+    # Baseline ensures Flyway initializes its schema history table without failing.
+    baseline-on-migrate: true
+    schemas: hr
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
+
+# JWK set URI for JwtDecoder (container DNS default)
+auth:
+  jwt:
+    jwk-set-uri: ${AUTH_JWKS_URI:http://auth-service:9092/.well-known/jwks.json}

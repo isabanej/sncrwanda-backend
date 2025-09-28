@@ -8,12 +8,12 @@ public class DocsController {
     return """
       <h2>SNCRWANDA Services</h2>
       <ul>
-        <li><a href="/swagger-ui/index.html">Gateway Swagger</a></li>
-        <li>http://localhost:8081/swagger-ui/index.html (Auth)</li>
-        <li>http://localhost:8082/swagger-ui/index.html (Ledger)</li>
-        <li>http://localhost:8083/swagger-ui/index.html (HR)</li>
-        <li>http://localhost:8084/swagger-ui/index.html (Students)</li>
-        <li>http://localhost:8085/swagger-ui/index.html (Reporting)</li>
+        <li><a href="http://localhost:9090/swagger-ui/index.html">API Gateway Swagger UI (http://localhost:9090)</a></li>
+        <li><a href="http://localhost:9092/swagger-ui/index.html">Auth Service - http://localhost:9092 (Auth)</a></li>
+        <li><a href="http://localhost:9091/swagger-ui/index.html">Ledger Service - http://localhost:9091 (Ledger)</a></li>
+        <li><a href="http://localhost:9094/swagger-ui/index.html">HR Service - http://localhost:9094 (HR)</a></li>
+        <li><a href="http://localhost:9095/swagger-ui/index.html">Student Service - http://localhost:9095 (Students)</a></li>
+        <li><a href="http://localhost:9096/swagger-ui/index.html">Reporting Service - http://localhost:9096 (Reporting)</a></li>
       </ul>
     """;
   }

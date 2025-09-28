@@ -1,0 +1,12 @@
+{
+  "fullName": "Jane Doe",
+  "dob": "1990-01-01",
+  "address": "123 Main St",
+  "position": "Teacher",
+  "salary": 50000.0,
+  "phone": "+250788000000",
+  "email": "jane.doe@example.com",
+  "department": { "id": "00000000-0000-0000-0000-000000000001" },
+  "branch": { "id": "00000000-0000-0000-0000-000000000001" },
+  "startDate": "2025-09-26"
+}

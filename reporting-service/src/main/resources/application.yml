@@ -1,10 +1,10 @@
 server:
-  port: 8085
+  port: 9096
 spring:
   application:
     name: reporting-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=reporting
+    url: jdbc:postgresql://postgres:5432/sncrwanda?currentSchema=reporting
     username: postgres
     password: postgres
   jpa:

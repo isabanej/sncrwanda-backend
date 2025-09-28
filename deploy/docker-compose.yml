@@ -45,6 +45,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9090:9090"
+    environment:
+      - AUTH_BASE_URL=http://auth-service:9092
+      - LEDGER_BASE_URL=http://ledger-service:9091
+      - HR_BASE_URL=http://hr-service:9094
+      - STUDENT_BASE_URL=http://student-service:9095
+      - REPORTING_BASE_URL=http://reporting-service:9096
     depends_on:
       - auth-service
       - ledger-service

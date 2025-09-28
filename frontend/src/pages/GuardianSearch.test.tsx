@@ -6,8 +6,8 @@ import { Providers } from '../test/test-utils'
 
 function mockFetchSequence(responses: any[]) {
   // @ts-ignore
-  global.fetch = vi.fn()
-  responses.forEach(r => (global.fetch as any).mockResolvedValueOnce({
+  globalThis.fetch = vi.fn()
+  responses.forEach(r => (globalThis.fetch as any).mockResolvedValueOnce({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -35,11 +35,11 @@ describe('Guardian live search', () => {
     fireEvent.click(addBtn)
 
     const guardianInput = screen.getByLabelText('Guardian')
-    fireEvent.change(guardianInput, { target: { value: 'janvier' } })
-    await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument())
+  fireEvent.change(guardianInput, { target: { value: 'janvier' } })
+  await waitFor(() => expect(screen.getByText(/Janvier Alpha/i)).toBeInTheDocument())
     // Now delete characters -> 'janvi'
-    fireEvent.change(guardianInput, { target: { value: 'janvi' } })
-    await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument())
+  fireEvent.change(guardianInput, { target: { value: 'janvi' } })
+  await waitFor(() => expect(screen.getByText(/Janvier Alpha/i)).toBeInTheDocument())
     // Should still contain Janvier Alpha
     expect(screen.getByText(/Janvier Alpha/i)).toBeInTheDocument()
   })

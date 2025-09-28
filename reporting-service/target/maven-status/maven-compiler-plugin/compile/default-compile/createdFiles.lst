@@ -1,4 +1,9 @@
-org\sncrwanda\reporting\ReportingApplication.class
+org\sncrwanda\reporting\security\SecurityUtils.class
 org\sncrwanda\reporting\web\GlobalExceptionHandler.class
 org\sncrwanda\reporting\web\ReportController.class
+org\sncrwanda\reporting\service\ReportingService.class
+org\sncrwanda\reporting\dto\ReportSummaryResponse.class
+org\sncrwanda\reporting\ReportingApplication.class
+org\sncrwanda\reporting\web\ReportingController.class
 org\sncrwanda\reporting\config\OpenApiConfig.class
+org\sncrwanda\reporting\config\SecurityConfig.class

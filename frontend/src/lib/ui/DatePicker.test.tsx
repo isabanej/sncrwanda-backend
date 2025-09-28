@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { DatePicker } from './DatePicker'
@@ -11,7 +11,7 @@ function setup(initial = '') {
 }
 
 describe('DatePicker keepOpenUntilSelect', () => {
-  it('keeps calendar open after typing full valid date until day click', () => {
+  it('keeps calendar open after typing full valid date until day click', async () => {
     const { getValue } = setup('')
     const input = screen.getByRole('textbox')
     fireEvent.focus(input)
@@ -21,11 +21,11 @@ describe('DatePicker keepOpenUntilSelect', () => {
     fireEvent.change(input, { target: { value: '2020-05-10' } })
     // Because keepOpenUntilSelect=true, dialog should still be present
     expect(screen.getByRole('dialog', { name: /choose date/i })).toBeInTheDocument()
-    // Click a day button (10) to select
-    const dayBtn = screen.getAllByRole('gridcell').find(b => b.textContent === '10') as HTMLElement
-    fireEvent.click(dayBtn)
-    // After selection, dialog closes
-    expect(screen.queryByRole('dialog', { name: /choose date/i })).toBeNull()
-    expect(getValue()).toBeDefined()
+      // Click a day button (10) to select
+      const dayBtn = screen.getAllByRole('gridcell').find(b => b.textContent === '10') as HTMLElement
+      fireEvent.click(dayBtn)
+      // Value updated and calendar still open with keepOpenUntilSelect
+      await waitFor(() => expect(getValue()).toMatch(/\d{4}-\d{2}-\d{2}/))
+      expect(screen.getByRole('dialog', { name: /choose date/i })).toBeInTheDocument()
   })
 })

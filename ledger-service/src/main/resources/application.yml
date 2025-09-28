@@ -1,10 +1,8 @@
 server:
-  port: 8082
+  port: 9091
 spring:
-  application:
-    name: ledger-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=ledger
+    url: jdbc:postgresql://postgres:5432/sncrwanda?currentSchema=ledger
     username: postgres
     password: postgres
   jpa:
