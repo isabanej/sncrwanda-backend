@@ -1,3 +1,5 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import PhoneInput from '../components/PhoneInput'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError } from '../lib/api'
 import { useToast } from '../lib/toast'
@@ -797,8 +799,8 @@ const EmployeeFormFields: React.FC<{
           <Field id={`${idPrefix}-dob`} label={<span style={{display:'inline-flex', alignItems:'center', gap:6}}>Date of birth <InfoIcon text="Must be 18+ (Format: YYYY-MM-DD)" /></span>} required error={submitted||touched.dob?errors.dob:undefined}>
             <DatePicker id={`${idPrefix}-dob`} name="dob" value={form.dob} unbounded defaultViewDate={new Date(new Date().getFullYear()-18, new Date().getMonth(), 1)} onChange={v=>{ setForm(f=>({...f, dob:v})); if(submitted) validateAndSet('dob') }} />
           </Field>
-          <Field id={`${idPrefix}-phone`} label={<span style={{display:'inline-flex', alignItems:'center', gap:6}}>Phone <InfoIcon text="Format: +250 7XX XXX XXX" /></span>} error={submitted||touched.phone?errors.phone:undefined}>
-            <input id={`${idPrefix}-phone`} value={form.phone} placeholder="+250 7XX XXX XXX" onBlur={()=>{ localFormatPhone(); const v=validateAndSet('phone'); if(!v.phone) setForm(f=>f) }} onChange={e=>{ setForm(f=>({...f, phone:e.target.value})); if(submitted) validateAndSet('phone') }} />
+          <Field id={`${idPrefix}-phone`} label={<span style={{display:'inline-flex', alignItems:'center', gap:6}}>Phone <InfoIcon text="Rwanda format: +2507XXXXXXXX (9 digits)" /></span>} error={submitted||touched.phone?errors.phone:undefined}>
+            <PhoneInput id={`${idPrefix}-phone`} value={form.phone} onChange={v=>{ setForm(f=>({...f, phone:v})); if(submitted) validateAndSet('phone') }} onBlur={()=>{ const v=validateAndSet('phone'); if(!v.phone) setForm(f=>f) }} noInlineValidation placeholder="+2507XXXXXXXX" />
           </Field>
           <Field id={`${idPrefix}-email`} label="Email" error={submitted||touched.email?errors.email:undefined}>
             <input id={`${idPrefix}-email`} value={form.email} placeholder="Optional" onBlur={()=>{ const v=validateAndSet('email'); if(!v.email) setForm(f=>f) }} onChange={e=>{ setForm(f=>({...f, email:e.target.value})); if(submitted) validateAndSet('email') }} />

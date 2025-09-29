@@ -427,6 +427,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #2b66ff44; border
   border-bottom: 1px solid var(--line, #ddd);
 }
 .modal-body { padding: 12px; }
+/* Allow tall forms (e.g., Employee create) to scroll without calendar popover being clipped */
+.modal[data-employee-modal] { max-height: 92vh; display: flex; flex-direction: column; }
+.modal[data-employee-modal] .modal-body { overflow-y: auto; overscroll-behavior: contain; }
 .modal-actions {
   padding: 10px 12px;
   display: flex;
