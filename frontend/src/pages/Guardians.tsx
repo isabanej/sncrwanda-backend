@@ -1,4 +1,3 @@
-// Clean rebuild of Guardians page after corruption
 import React, { useEffect, useMemo, useState } from 'react'
 import ConfirmModal from '../components/shared/ConfirmModal'
 import { Icon } from '../components/Icon'
@@ -7,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 import { MSG } from '../lib/messages'
 import { isPhone } from '../lib/validation'
+import PhoneInput from '../components/PhoneInput'
 
 type UUID = string
 interface Guardian { id: UUID; fullName: string; phone: string; email?: string; address?: string }
@@ -48,13 +48,46 @@ const Guardians: React.FC = () => {
   })(); return () => { on=false } }, [token, showArchived, reload, logout, toast])
 
   function formatPhone(v: string){ const raw=v.trim(); const hadPlus=raw.startsWith('+'); const d=raw.replace(/\D/g,''); if(!d) return ''; if(hadPlus && d.startsWith('2507') && d.length===12){ const t=d.slice(3); return `+250 ${t.slice(0,3)} ${t.slice(3,6)} ${t.slice(6,9)}` } if(!hadPlus && d.startsWith('07') && d.length===10) return `${d.slice(0,4)} ${d.slice(4,7)} ${d.slice(7,10)}`; return (hadPlus?'+':'')+d }
-  function validateField(field:'fullName'|'phone'|'email', value:string){ let err: string | undefined; if(field==='fullName') err=value.trim()?undefined:MSG.fullNameRequired; if(field==='phone') err=value.trim()&&isPhone(value)?undefined:MSG.phoneInvalid; if(field==='email'){ const v=value.trim(); err = v && !/.+@.+\..+/.test(v)?MSG.invalidEmail:undefined } return err }
+  function normalizeEmail(raw: string){
+    return raw.trim()
+      .replace(/[\u200B-\u200D\uFEFF]/g,'') // zero-width
+      .replace(/\s+/g,'') // remove interior whitespace
+      .toLowerCase()
+  }
+  function detailedEmailError(v: string): string | undefined {
+    if(!v) return undefined
+    if(/\s/.test(v)) return 'Email cannot contain spaces'
+    if(v.split('@').length !== 2) return 'Email must contain a single @'
+    const [local, domain] = v.split('@')
+    if(!local) return 'Email username (before @) is missing'
+    if(!domain) return 'Email domain (after @) is missing'
+    if(/\.\./.test(v)) return 'Email cannot contain consecutive dots'
+    if(domain.startsWith('.') || domain.endsWith('.')) return 'Email domain cannot start or end with a dot'
+    if(!domain.includes('.')) return 'Email domain must contain a dot'
+    const tld = domain.split('.').pop() || ''
+    if(tld.length < 2) return 'Email top-level domain must be at least 2 letters'
+    if(!/^[a-z0-9._%+-]+$/i.test(local)) return 'Email username has invalid characters'
+    if(!/^[a-z0-9.-]+$/i.test(domain.replace(/\.[a-z0-9-]+$/i,''))) {/* ignore subdomain chars check loosely */}
+    // Final broad pattern check
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email (use name@example.com)'
+    return undefined
+  }
+  function validateField(field:'fullName'|'phone'|'email'|'address', value:string){
+    let err: string | undefined;
+    if(field==='fullName') err = value.trim()? undefined : MSG.fullNameRequired;
+    if(field==='phone') err = value.trim() && isPhone(value)? undefined : MSG.phoneInvalid;
+    if(field==='email') { err = detailedEmailError(value) }
+  if(field==='address') err = value.trim()? undefined : MSG.addressRequired;
+    return err;
+  }
   function setDialogField(field:'fullName'|'phone'|'email'|'address', value:string){
     setEditDialog(d=>{
       if(!d) return d
-      const form = { ...d.form, [field]: field==='phone'? value : value }
+      let newValue = value
+      if(field==='email') newValue = normalizeEmail(newValue)
+      const form = { ...d.form, [field]: field==='phone'? value : newValue }
       let errors = d.errors||{}
-      if(['fullName','phone','email'].includes(field)) {
+      if(['fullName','phone','email','address'].includes(field)) {
         let v = form[field as keyof typeof form] as string
         if(field==='phone') v = formatPhone(v)
         errors = { ...errors, [field]: validateField(field as any, v) }
@@ -72,11 +105,22 @@ const Guardians: React.FC = () => {
   function openDeleteDialog(g:Guardian){ setEditDialog({ mode:'delete', id:g.id, form:{ fullName:g.fullName, phone:g.phone, email:g.email||'', address:g.address||'' } }) }
   function openRestoreDialog(g:Guardian){ setEditDialog({ mode:'restore', id:g.id, form:{ fullName:g.fullName, phone:g.phone, email:g.email||'', address:g.address||'' } }) }
   function onEditDialogChange(e:React.ChangeEvent<HTMLInputElement>){ const {name,value}=e.target; setDialogField(name as any, value) }
+  function onEmailBlur(e: React.FocusEvent<HTMLInputElement>){ const v = e.target.value; setDialogField('email', v) }
   async function onEditDialogSubmit(e:React.FormEvent){ e.preventDefault(); if(!editDialog) return; // validate
-    let anyErr=false; const f = editDialog.form; const fields: ('fullName'|'phone'|'email')[] = ['fullName','phone','email'];
-    const errs: any = {}
+    let anyErr=false; const f = editDialog.form; const fields: ('fullName'|'phone'|'email'|'address')[] = ['fullName','phone','email','address'];
+    const errs: Record<string,string|undefined> = {}
     fields.forEach(k=>{ const v=(f as any)[k]; const er = validateField(k,v); errs[k]=er; if(er) anyErr=true })
-    if(anyErr){ setEditDialog(d=> d? {...d, errors:{...d.errors,...errs}}:d); return }
+    if(anyErr){
+      setEditDialog(d=> d? {...d, errors:{...d.errors,...errs}}:d);
+      const presentErrs = Object.entries(errs).filter(([,v])=>v)
+      const onlyEmailError = presentErrs.length === 1 && presentErrs[0][0] === 'email'
+      if(!onlyEmailError){
+        const labels: Record<string,string> = { fullName:'Full name', phone:'Phone', email:'Email', address:'Address' };
+        const detailed = presentErrs.map(([k,v])=> `${labels[k]||k}: ${v}`);
+        toast.show(`Please fix: ${detailed.join('; ')}`,'error');
+      }
+      return;
+    }
     setEditDialog(d=> d? {...d, busy:true}:d)
     try {
       if(editDialog.mode==='edit' && editDialog.id){
@@ -134,7 +178,7 @@ const Guardians: React.FC = () => {
       </div>
   </div>
 
-  {editDialog && (editDialog.mode==='edit' || editDialog.mode==='create') && <div className="modal-backdrop" role="presentation" onClick={()=> { if(!editDialog.busy) setEditDialog(null) }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="edit-guardian-title" onClick={e=>e.stopPropagation()}><div className="modal-head"><strong id="edit-guardian-title">{editDialog.mode==='create' ? 'Add guardian':'Edit guardian'}</strong><button type="button" className="chip-x" aria-label="Close" onClick={()=> setEditDialog(null)} disabled={!!editDialog.busy}>×</button></div><div className="modal-body"><form id="edit-guardian-form" className="form-modern" onSubmit={onEditDialogSubmit} noValidate><div className="form-2col"><div className="field"><label htmlFor="eg-fullName" className="req">Full name</label><input id="eg-fullName" name="fullName" required value={editDialog.form.fullName} onChange={onEditDialogChange} /></div><div className="field"><label htmlFor="eg-phone" className="req">Phone</label><input id="eg-phone" name="phone" required value={editDialog.form.phone} onChange={onEditDialogChange} /></div></div><div className="form-2col"><div className="field"><label htmlFor="eg-email">Email</label><input id="eg-email" name="email" value={editDialog.form.email} onChange={onEditDialogChange} /></div><div className="field"><label htmlFor="eg-address">Address</label><input id="eg-address" name="address" value={editDialog.form.address} onChange={onEditDialogChange} /></div></div><div className="modal-actions"><button type="submit" className="btn btn-primary" disabled={!!editDialog.busy}>{editDialog.busy? (editDialog.mode==='create'?'Saving…':'Saving…') : (editDialog.mode==='create' ? 'Save guardian':'Save changes')}</button><button type="button" className="btn btn-secondary" onClick={()=> setEditDialog(null)} style={{marginLeft:8}}>Cancel</button></div></form></div></div></div>}
+  {editDialog && (editDialog.mode==='edit' || editDialog.mode==='create') && <div className="modal-backdrop" role="presentation"><div className="modal" role="dialog" aria-modal="true" aria-labelledby="edit-guardian-title" onClick={e=>e.stopPropagation()}><div className="modal-head"><strong id="edit-guardian-title">{editDialog.mode==='create' ? 'Add guardian':'Edit guardian'}</strong></div><div className="modal-body"><form id="edit-guardian-form" className="form-modern guardian-form" onSubmit={onEditDialogSubmit} noValidate><div className="form-2col"><div className="field"><label htmlFor="eg-fullName" className="req">Full name</label><input id="eg-fullName" name="fullName" required value={editDialog.form.fullName} onChange={onEditDialogChange} aria-invalid={!!editDialog.errors?.fullName} />{editDialog.errors?.fullName && <div className="error" role="alert">{editDialog.errors.fullName}</div>}</div><div className="field"><label htmlFor="eg-phone" className="req" style={{display:'flex',alignItems:'center',gap:6}}>Phone Number <span tabIndex={0} aria-label="Rwanda format: plus two five zero seven followed by eight digits" title="Rwanda format: +2507XXXXXXXX (9 digits)" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,fontSize:11,fontWeight:700,border:'1px solid var(--line)',borderRadius:'50%',background:'var(--surface-muted)',color:'#334155',cursor:'help'}}>i</span></label><PhoneInput id="eg-phone" value={editDialog.form.phone} onChange={(v: string)=> setDialogField('phone', v)} aria-invalid={!!editDialog.errors?.phone} required noInlineValidation />{editDialog.errors?.phone && <div className="error" role="alert">{editDialog.errors.phone}</div>}</div></div><div className="form-2col"><div className="field"><label htmlFor="eg-email">Email</label><input id="eg-email" name="email" value={editDialog.form.email} onChange={onEditDialogChange} onBlur={onEmailBlur} aria-invalid={!!editDialog.errors?.email} placeholder="name@example.com" />{editDialog.errors?.email && <div className="error" role="alert">{editDialog.errors.email}</div>}</div><div className="field"><label htmlFor="eg-address" className="req">Address</label><input id="eg-address" name="address" required value={editDialog.form.address} onChange={onEditDialogChange} aria-invalid={!!editDialog.errors?.address} />{editDialog.errors?.address && <div className="error" role="alert">{editDialog.errors.address}</div>}</div></div><div className="modal-actions"><button type="submit" className="btn btn-primary" disabled={!!editDialog.busy}>{editDialog.busy? (editDialog.mode==='create'?'Saving…':'Saving…') : (editDialog.mode==='create' ? 'Save guardian':'Save changes')}</button><button type="button" className="btn btn-secondary" onClick={()=> setEditDialog(null)} style={{marginLeft:8}}>Cancel</button></div></form></div></div></div>}
 
     {editDialog && (editDialog.mode==='delete' || editDialog.mode==='restore') && <ConfirmModal title={editDialog.mode==='delete'? 'Delete guardian':'Restore guardian'} message={<div><p style={{marginTop:0}}>{editDialog.mode==='delete'? 'Are you sure you want to delete this guardian? This is a soft delete for archiving.':'This will restore the guardian back to active lists.'}</p><div className="confirm-summary"><div><strong>Name:</strong> {editDialog.form.fullName||'-'}</div><div><strong>Phone:</strong> {editDialog.form.phone||'-'}</div></div></div>} busy={!!editDialog.busy} onCancel={()=> setEditDialog(null)} onConfirm={()=> { editDialog.mode==='delete'? onEditDialogDelete(): onEditDialogRestore() }} confirmLabel={editDialog.mode==='delete'? (editDialog.busy?'Deleting…':'Delete') : (editDialog.busy? 'Restoring…':'Restore')} confirmStyle={editDialog.mode==='delete'? 'danger':'primary'} />}
   </div>

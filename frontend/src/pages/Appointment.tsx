@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useToast } from '../lib/toast'
 import { validateAppointment, validateAppointmentField } from '../lib/validation'
+import PhoneInput from '../components/PhoneInput'
 import { MSG } from '../lib/messages'
 
 const Appointment: React.FC = () => {
@@ -63,10 +64,8 @@ const Appointment: React.FC = () => {
             {fieldErrors.email && <div id="appt-email-error" className="error" role="alert">{fieldErrors.email}</div>}
           </div>
           <div className="field">
-            <label htmlFor="phone">Phone</label>
-            <input id="phone" name="phone" value={form.phone} onChange={onChange}
-                   onBlur={e => onBlurField('phone', e.target.value)} placeholder="Enter phone"
-                   aria-invalid={!!fieldErrors.phone} aria-describedby={fieldErrors.phone ? 'appt-phone-error' : undefined} />
+            <label htmlFor="phone" style={{display:'flex',alignItems:'center',gap:6}}>Phone Number <span tabIndex={0} aria-label="Rwanda format: plus two five zero seven followed by eight digits" title="Rwanda format: +2507XXXXXXXX (9 digits)" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,fontSize:11,fontWeight:700,border:'1px solid var(--line)',borderRadius:'50%',background:'var(--surface-muted)',color:'#334155',cursor:'help'}}>i</span></label>
+            <PhoneInput id="phone" value={form.phone} onChange={v=> { setForm(f=>({...f, phone:v})); if(touched.phone){ const err = validateAppointmentField('phone', v as any); setFieldErrors(e=>({...e, phone: err})); } }} onBlur={e=> onBlurField('phone', (e.target as HTMLInputElement).value)} placeholder="+2507XXXXXXXX" persistKey="appointment" enableSearch aria-invalid={!!fieldErrors.phone} aria-describedby={fieldErrors.phone ? 'appt-phone-error' : undefined} />
             {fieldErrors.phone && <div id="appt-phone-error" className="error" role="alert">{fieldErrors.phone}</div>}
           </div>
           <div className="field">

@@ -3,8 +3,17 @@ import { MSG } from './messages'
 
 // Helper: phone format (allow +, digits, spaces, dashes, parentheses) and 7-15 digits
 export const isPhone = (v: string) => {
-  const digits = v.replace(/\D/g, '').length
-  return /^\+?[0-9 ()-]+$/.test(v) && digits >= 7 && digits <= 15
+  const digitsOnly = v.replace(/\D/g, '')
+  if(!/^\+?[0-9 ()-]+$/.test(v)) return false
+  if(digitsOnly.length < 7 || digitsOnly.length > 15) return false
+  // Rwanda strict rule: +250 7 followed by 9 digits (total after 250: 10 digits including leading 7)
+  if(v.startsWith('+250')){
+    const after = digitsOnly.slice(3) // remove 250
+    if(!after.startsWith('7')) return false
+    // New rule: +2507 plus 8 other digits (9 total local digits)
+    if(after.length !== 9) return false
+  }
+  return true
 }
 
 // Schemas with explicit required messages
