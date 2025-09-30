@@ -4,6 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sncrwanda.student.domain.StudentReport;
 import org.sncrwanda.student.repo.StudentReportRepo;
+import org.sncrwanda.student.security.SecurityUtils;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.sncrwanda.student.service.StudentReportService;
 
 import java.time.LocalDate;
@@ -51,12 +54,13 @@ class StudentReportServiceArchiveTest {
     void soft_delete_marks_archived_true() {
         StudentReport r = newEntity();
         when(repo.findById(r.getId())).thenReturn(Optional.of(r));
-        // Simulate admin path so service directly sets archived
-        mockAdmin();
-        boolean result = service.delete(r.getId());
-        assertTrue(result);
-        assertTrue(r.isArchived());
-        verify(repo, times(1)).save(r);
+        try (MockedStatic<SecurityUtils> st = Mockito.mockStatic(SecurityUtils.class)) {
+            st.when(SecurityUtils::isAdmin).thenReturn(true);
+            boolean result = service.delete(r.getId());
+            assertTrue(result);
+            assertTrue(r.isArchived());
+            verify(repo, times(1)).save(r);
+        }
     }
 
     @Test
@@ -64,15 +68,13 @@ class StudentReportServiceArchiveTest {
         StudentReport r = newEntity();
         r.setArchived(true);
         when(repo.findById(r.getId())).thenReturn(Optional.of(r));
-        mockAdmin();
-        boolean result = service.restore(r.getId());
-        assertTrue(result);
-        assertFalse(r.isArchived());
-        verify(repo).save(r);
+        try (MockedStatic<SecurityUtils> st = Mockito.mockStatic(SecurityUtils.class)) {
+            st.when(SecurityUtils::isAdmin).thenReturn(true);
+            boolean result = service.restore(r.getId());
+            assertTrue(result);
+            assertFalse(r.isArchived());
+            verify(repo).save(r);
+        }
     }
 
-    private void mockAdmin(){
-        // crude static stubbing by overriding thread locals if SecurityUtils uses them; if not accessible, we
-        // just assume admin path (would refine if SecurityUtils available). For now no-op.
-    }
 }

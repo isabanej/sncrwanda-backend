@@ -55,8 +55,18 @@ public class GlobalExceptionHandler {
     try {
       Object d = ex.getDetails();
       if (d != null) {
-        String msg = d.toString();
-        details = java.util.List.of(new org.sncrwanda.common.api.ErrorResponse.FieldError("hint", msg));
+        if (d instanceof java.util.Map<?,?> map) {
+          java.util.List<org.sncrwanda.common.api.ErrorResponse.FieldError> list = new java.util.ArrayList<>();
+          for (var e : map.entrySet()) {
+            String key = java.util.Objects.toString(e.getKey(), "detail");
+            String val = java.util.Objects.toString(e.getValue(), null);
+            list.add(new org.sncrwanda.common.api.ErrorResponse.FieldError(key, val));
+          }
+          details = list;
+        } else {
+          // Fallback: single hint field
+          details = java.util.List.of(new org.sncrwanda.common.api.ErrorResponse.FieldError("hint", d.toString()));
+        }
       }
     } catch (Exception ignore) {}
     return new ErrorResponse(Instant.now(), traceId(), req.getRequestURI(), "CONFLICT", ex.getMessage(), details);

@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
+import java.time.Instant;
 public interface GuardianRepo extends JpaRepository<Guardian, UUID> {
 	@Query("select g from Guardian g where g.isDeleted = false")
 	List<Guardian> findAllActive();
@@ -15,8 +16,8 @@ public interface GuardianRepo extends JpaRepository<Guardian, UUID> {
 
 	@Transactional
 	@Modifying
-	@Query("update Guardian g set g.isDeleted = true, g.deletedAt = CURRENT_TIMESTAMP, g.deletedBy = ?2, g.deletedByName = ?3, g.deletedByPhone = ?4 where g.id = ?1 and g.isDeleted = false")
-	int softDelete(UUID id, UUID deletedBy, String deletedByName, String deletedByPhone);
+	@Query("update Guardian g set g.isDeleted = true, g.deletedAt = ?5, g.deletedBy = ?2, g.deletedByName = ?3, g.deletedByPhone = ?4 where g.id = ?1 and g.isDeleted = false")
+	int softDelete(UUID id, UUID deletedBy, String deletedByName, String deletedByPhone, Instant deletedAt);
 
 	@Query("select g from Guardian g where g.isDeleted = true")
 	List<Guardian> findAllArchived();

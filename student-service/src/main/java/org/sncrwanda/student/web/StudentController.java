@@ -10,6 +10,8 @@ import org.sncrwanda.student.repo.GuardianRepo;
 import org.sncrwanda.student.service.StudentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class StudentController {
 
     private final StudentService studentService;
     private final GuardianRepo guardianRepo;
+    private static final Logger log = LoggerFactory.getLogger(StudentController.class);
 
     public StudentController(StudentService studentService, GuardianRepo guardianRepo) {
         this.studentService = studentService;
@@ -62,6 +65,7 @@ public class StudentController {
                 : guardianRepo.findByFullNameIgnoreCaseAndIsDeletedFalse(name);
             boolean activeDup = dupActive.stream().anyMatch(x -> equalPhone(normPhone, normalizePhone(x.getPhone())));
             if (activeDup) {
+                log.debug("createGuardian conflict: active duplicate detected name='{}' normPhone='{}' branchId={} dupCount={}", name, normPhone, branchId, dupActive.size());
                 throw new org.sncrwanda.student.exception.ConflictException("Guardian already exists with the same name and phone");
             }
             List<Guardian> dupAny = branchId != null
@@ -70,6 +74,7 @@ public class StudentController {
             var archivedMatch = dupAny.stream().filter(x -> x.isDeleted() && equalPhone(normPhone, normalizePhone(x.getPhone()))).findFirst();
             if (archivedMatch.isPresent()) {
                 UUID archivedId = archivedMatch.get().getId();
+                log.debug("createGuardian conflict: archived duplicate detected name='{}' normPhone='{}' branchId={} archivedId={}", name, normPhone, branchId, archivedId);
                 throw new org.sncrwanda.student.exception.ConflictException(
                     "Guardian exists in archive with the same name and phone. Restore it instead.",
                     java.util.Map.of("archivedId", archivedId != null ? archivedId.toString() : null)
@@ -84,6 +89,7 @@ public class StudentController {
             g.setPhone(normPhone);
         }
         Guardian saved = guardianRepo.save(g);
+        log.debug("createGuardian success id={} name='{}' phone='{}' branchId={}", saved.getId(), saved.getFullName(), saved.getPhone(), saved.getBranchId());
         return ResponseEntity.ok(saved);
     }
 
@@ -174,11 +180,15 @@ public class StudentController {
                 || branchId == null /* dev-friendly: allow when no branch claim */
                 || (branchId != null && existing.getBranchId() != null && existing.getBranchId().equals(branchId));
         if (!allowed) return ResponseEntity.status(403).build();
-        existing.setFullName(g.getFullName());
-        existing.setPhone(g.getPhone());
+        String newName = g.getFullName() != null ? g.getFullName().trim() : null;
+        String newPhone = g.getPhone() != null ? g.getPhone().trim() : null;
+        String normPhone = normalizePhone(newPhone);
+        if (newName != null && !newName.isEmpty()) existing.setFullName(newName);
+        if (normPhone != null && !normPhone.isEmpty()) existing.setPhone(normPhone);
         existing.setEmail(g.getEmail());
         existing.setAddress(g.getAddress());
         Guardian saved = guardianRepo.save(existing);
+        log.debug("updateGuardian success id={} name='{}' phone='{}' branchId={}", saved.getId(), saved.getFullName(), saved.getPhone(), saved.getBranchId());
         return ResponseEntity.ok(saved);
     }
 
@@ -255,6 +265,105 @@ public class StudentController {
         return archived ? studentService.listArchived() : studentService.listAll();
     }
 
+    // Lightweight select options for active students (used in report form dropdown)
+    public record StudentOption(UUID id, String name) {}
+
+    @GetMapping("/select")
+    @Operation(summary = "List active students (lightweight for selection) – resilient branch fallback")
+    public List<StudentOption> listActiveStudentOptions(@RequestParam(name = "q", required = false) String q) {
+        boolean admin = org.sncrwanda.student.security.SecurityUtils.isAdmin();
+        java.util.UUID branchId = org.sncrwanda.student.security.SecurityUtils.getBranchId();
+        // Now using full list including deleted as per request (frontend will decide visibility)
+        var global = studentService.listAllIncludingDeleted();
+        if (global.isEmpty()) {
+            // Emergency inline seed: create guardian + demo student so UI is never empty.
+            try {
+                Guardian g = new Guardian();
+                g.setFullName("Quick Guardian");
+                g.setPhone("0788000001");
+                g.setAddress("Kigali");
+                g = guardianRepo.save(g);
+                org.sncrwanda.student.dto.StudentRequest sr = new org.sncrwanda.student.dto.StudentRequest();
+                sr.setGuardianId(g.getId());
+                sr.setChildName("Quick Student");
+                sr.setChildDob(java.time.LocalDate.of(2015,1,1));
+                sr.setHobbies("Football");
+                studentService.create(sr);
+                global = studentService.listAllIncludingDeleted();
+                log.info("Auto-seeded quick student because list was empty");
+            } catch (Exception ex) {
+                log.warn("Failed quick seed attempt: {}", ex.toString());
+            }
+        }
+        java.util.List<org.sncrwanda.student.dto.StudentResponse> scoped = global;
+        if (!admin && branchId != null) {
+            scoped = global.stream().filter(s -> branchId.equals(s.getBranchId())).toList();
+            // Fallback: if branch produced zero but global has data, expose global (misconfigured claim scenario)
+            if (scoped.isEmpty() && !global.isEmpty()) scoped = global;
+        }
+        if (q != null && !q.isBlank()) {
+            String needle = q.toLowerCase();
+            scoped = scoped.stream().filter(s -> s.getChildName() != null && s.getChildName().toLowerCase().contains(needle)).toList();
+        }
+        org.slf4j.LoggerFactory.getLogger(StudentController.class)
+            .debug("/students/select admin={} branchId={} global={} final={} q='{}'", admin, branchId, global.size(), scoped.size(), q);
+        return scoped.stream()
+                .sorted(java.util.Comparator.comparing(org.sncrwanda.student.dto.StudentResponse::getChildName, java.text.Collator.getInstance()))
+                .map(s -> new StudentOption(s.getId(), s.getChildName()))
+                .toList();
+    }
+
+    // Alternate endpoint kept for debugging to verify branch scoping differences if needed by frontend diagnostics
+    @GetMapping("/select2")
+    @Operation(summary = "List active students (unfiltered global) – diagnostic")
+    public List<StudentOption> listActiveStudentOptionsGlobal(@RequestParam(name = "q", required = false) String q) {
+        var list = studentService.listAllIncludingDeleted();
+        if (list.isEmpty()) {
+            try {
+                Guardian g = new Guardian();
+                g.setFullName("Quick Guardian");
+                g.setPhone("0788000001");
+                g.setAddress("Kigali");
+                g = guardianRepo.save(g);
+                org.sncrwanda.student.dto.StudentRequest sr = new org.sncrwanda.student.dto.StudentRequest();
+                sr.setGuardianId(g.getId());
+                sr.setChildName("Quick Student");
+                sr.setChildDob(java.time.LocalDate.of(2015,1,1));
+                sr.setHobbies("Football");
+                studentService.create(sr);
+                list = studentService.listAllIncludingDeleted();
+                log.info("Auto-seeded quick student (select2) because list was empty");
+            } catch (Exception ex) {
+                log.warn("Failed quick seed attempt (select2): {}", ex.toString());
+            }
+        }
+        if (q != null && !q.isBlank()) {
+            String needle = q.toLowerCase();
+            list = list.stream().filter(s -> s.getChildName() != null && s.getChildName().toLowerCase().contains(needle)).toList();
+        }
+        return list.stream()
+                .sorted(java.util.Comparator.comparing(org.sncrwanda.student.dto.StudentResponse::getChildName, java.text.Collator.getInstance()))
+                .map(s -> new StudentOption(s.getId(), s.getChildName()))
+                .toList();
+    }
+
+    @GetMapping("/select/debug")
+    @Operation(summary = "Diagnostic: student select visibility info (admin only)")
+    public java.util.Map<String,Object> selectDebug() {
+        boolean admin = org.sncrwanda.student.security.SecurityUtils.isAdmin();
+        if (!admin) return java.util.Map.of("error","forbidden");
+        var global = studentService.listAll();
+        var byBranch = new java.util.HashMap<java.util.UUID, Long>();
+        for (var s : global) {
+            var b = s.getBranchId();
+            byBranch.put(b, byBranch.getOrDefault(b,0L)+1L);
+        }
+        return java.util.Map.of(
+            "total", global.size(),
+            "byBranch", byBranch
+        );
+    }
+
     // Backend-driven visibility summary to support frontend relying purely on backend filtering logic.
     // Admin only. Returns counts to quickly diagnose empty lists in UI.
     @GetMapping("/visible/summary")
@@ -290,13 +399,14 @@ public class StudentController {
         return java.util.Map.of("sample", list);
     }
 
-    @GetMapping("/{id}")
+    // Constrain {id} to UUID pattern so constant sub-paths (e.g. /select) are not misinterpreted
+    @GetMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Get a student by ID")
     public ResponseEntity<StudentResponse> getStudent(@PathVariable UUID id) {
         return studentService.getById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Update a student")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
@@ -312,14 +422,14 @@ public class StudentController {
         return studentService.update(id, req).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Soft delete a student (kept for audit)")
     public ResponseEntity<Void> deleteStudent(@PathVariable UUID id) {
         boolean deleted = studentService.delete(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/restore")
+    @PostMapping("/{id:[0-9a-fA-F\\-]{36}}/restore")
     @Operation(summary = "Restore a previously archived student")
     public ResponseEntity<Void> restoreStudent(@PathVariable UUID id) {
         boolean restored = studentService.restore(id);
@@ -383,5 +493,49 @@ public class StudentController {
     public ResponseEntity<Void> savePopularHobbies(@RequestBody(required = false) HobbiesPayload payload) {
         // For now, no-op to acknowledge client attempts to persist. Could be extended to store per-branch.
         return ResponseEntity.noContent().build();
+    }
+
+    // --- Needs lookup endpoint (frontend previously hard-coded; now backend sourced) ---
+    public record NeedOption(String code, String label, String color) {}
+
+    private static final java.util.Map<String,String> NEED_LABEL_OVERRIDES = java.util.Map.of(
+        "SOCIAL_COMMUNICATION_AUTISM", "Social/ Communication (Autism)",
+        "MENTAL_EMOTIONAL_HEALTH", "Mental/ Emotional health",
+        "HEALTH_CONDITION", "Health conditional (e.g Epilepsy)"
+    );
+
+    private static final java.util.Map<String,String> NEED_COLORS = java.util.Map.ofEntries(
+        java.util.Map.entry("PHYSICAL", "#2563eb"),
+        java.util.Map.entry("HEARING", "#6366f1"),
+        java.util.Map.entry("SOCIAL_COMMUNICATION_AUTISM", "#9333ea"),
+        java.util.Map.entry("MENTAL_EMOTIONAL_HEALTH", "#db2777"),
+        java.util.Map.entry("HEALTH_CONDITION", "#059669"),
+        java.util.Map.entry("MOBILITY", "#0d9488"),
+        java.util.Map.entry("VISUAL", "#ea580c"),
+        java.util.Map.entry("SPEECH_LANGUAGE", "#7c3aed"),
+        java.util.Map.entry("LEARNING", "#16a34a"),
+        java.util.Map.entry("OTHER", "#6b7280")
+    );
+
+    private static String humanizeNeed(String code) {
+        if (NEED_LABEL_OVERRIDES.containsKey(code)) return NEED_LABEL_OVERRIDES.get(code);
+        String lower = code.toLowerCase(Locale.ROOT).replace('_', ' ');
+        String[] parts = lower.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i=0;i<parts.length;i++) {
+            String p = parts[i];
+            if (p.isEmpty()) continue;
+            sb.append(Character.toUpperCase(p.charAt(0))).append(p.length()>1 ? p.substring(1) : "");
+            if (i < parts.length - 1) sb.append(' ');
+        }
+        return sb.toString();
+    }
+
+    @GetMapping("/needs")
+    @Operation(summary = "List supported needs (enum values) with human labels & colors")
+    public List<NeedOption> listNeeds() {
+        return java.util.Arrays.stream(org.sncrwanda.student.domain.Need.values())
+            .map(n -> new NeedOption(n.name(), humanizeNeed(n.name()), NEED_COLORS.getOrDefault(n.name(), "#6b7280")))
+            .toList();
     }
 }

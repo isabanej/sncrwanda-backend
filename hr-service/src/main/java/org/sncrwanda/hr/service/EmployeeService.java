@@ -169,7 +169,16 @@ public class EmployeeService {
             return employeeRepository.findActiveTeachers("teacher");
         }
         UUID branchId = SecurityUtils.getBranchId();
-        if (branchId == null) return List.of();
-        return employeeRepository.findActiveTeachersByBranch(branchId, "teacher");
+        if (branchId == null) {
+            // Fallback: branch claim missing -> return global teachers list (safer than empty UX)
+            return employeeRepository.findActiveTeachers("teacher");
+        }
+        List<Employee> scoped = employeeRepository.findActiveTeachersByBranch(branchId, "teacher");
+        if (scoped.isEmpty()) {
+            // If user branch has no teachers but global does, gracefully fallback (prevents empty dropdown confusion)
+            List<Employee> global = employeeRepository.findActiveTeachers("teacher");
+            if (!global.isEmpty()) return global;
+        }
+        return scoped;
     }
 }

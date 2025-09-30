@@ -5,6 +5,7 @@ org\sncrwanda\hr\domain\PayrollLine$PayrollLineBuilder.class
 org\sncrwanda\hr\web\GlobalExceptionHandler.class
 org\sncrwanda\hr\repository\PayrollPeriodRepository.class
 org\sncrwanda\hr\repository\BranchRepository.class
+org\sncrwanda\hr\config\TeacherDataInitializer.class
 org\sncrwanda\hr\dto\DepartmentResponse.class
 org\sncrwanda\hr\dto\PayrollLineRequest.class
 org\sncrwanda\hr\HrApplication.class
@@ -46,6 +47,7 @@ org\sncrwanda\hr\repository\EmployeeEvaluationRepository.class
 org\sncrwanda\hr\controller\TeacherController.class
 org\sncrwanda\hr\service\PayrollService.class
 org\sncrwanda\hr\domain\Branch$BranchBuilder.class
+org\sncrwanda\hr\controller\EmployeeController$TeacherOption.class
 org\sncrwanda\hr\dto\PayrollLineRequest$LineType.class
 org\sncrwanda\hr\repository\EmployeeRepository.class
 org\sncrwanda\hr\controller\DepartmentController.class

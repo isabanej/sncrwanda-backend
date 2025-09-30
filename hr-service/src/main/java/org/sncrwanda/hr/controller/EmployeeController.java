@@ -78,4 +78,16 @@ public class EmployeeController {
         boolean restored = employeeService.restoreEmployee(id);
         return restored ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
+
+    // --- Lightweight teacher selection endpoint for student report form ---
+    public record TeacherOption(UUID id, String fullName, String position) {}
+
+    @GetMapping("/teachers")
+    @Operation(summary = "List active teachers (filtered by branch unless admin)")
+    public List<TeacherOption> listTeachers() {
+        return employeeService.listTeachers().stream()
+                .filter(e -> e.isActive() && !e.isDeleted())
+                .map(e -> new TeacherOption(e.getId(), e.getFullName(), e.getPosition()))
+                .toList();
+    }
 }

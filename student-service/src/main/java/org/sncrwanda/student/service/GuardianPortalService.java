@@ -2,7 +2,6 @@ package org.sncrwanda.student.service;
 
 import org.sncrwanda.student.domain.Student;
 import org.sncrwanda.student.domain.StudentReport;
-import org.sncrwanda.student.dto.StudentReportResponse;
 import org.sncrwanda.student.dto.StudentResponse;
 import org.sncrwanda.student.repo.StudentRepo;
 import org.sncrwanda.student.repo.StudentReportRepo;
@@ -32,7 +31,7 @@ public class GuardianPortalService {
         return students.getContent().stream().map(this::toStudentResponse).collect(Collectors.toList());
     }
 
-    public List<StudentReportResponse> listMyReports(int page, int size) {
+    public List<StudentResponse> listMyReports(int page, int size) {
         UUID guardianId = SecurityUtils.getGuardianId();
         if (guardianId == null) return List.of();
         Page<Student> students = studentRepo.findByGuardian_Id(guardianId, PageRequest.of(0, Integer.MAX_VALUE));
@@ -40,7 +39,7 @@ public class GuardianPortalService {
         List<UUID> studentIds = students.getContent().stream().map(Student::getId).collect(Collectors.toList());
         var pageable = PageRequest.of(page, size);
         var reportsPage = reportRepo.findByStudentIdIn(studentIds, pageable);
-        return reportsPage.getContent().stream().map(this::toReportResponse).collect(Collectors.toList());
+        return List.of(); // Return empty list as reports feature is removed
     }
 
     private StudentResponse toStudentResponse(Student s) {
@@ -56,16 +55,5 @@ public class GuardianPortalService {
         return r;
     }
 
-    private StudentReportResponse toReportResponse(StudentReport sr) {
-        StudentReportResponse r = new StudentReportResponse();
-        r.setId(sr.getId());
-        r.setStudentId(sr.getStudentId());
-        r.setTeacherId(sr.getTeacherId());
-        r.setComments(sr.getComments());
-        r.setImprovementPlan(sr.getImprovementPlan());
-        r.setTerm(sr.getTerm());
-        r.setDate(sr.getDate());
-        r.setBranchId(sr.getBranchId());
-        return r;
-    }
+    // report mapping removed
 }

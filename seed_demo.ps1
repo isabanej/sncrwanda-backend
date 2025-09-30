@@ -52,11 +52,7 @@ try {
   $studentId = $student.id
   Write-Output "STUDENT_ID: $studentId"
 
-  # 6) Create student performance report (as ADMIN, teacherId can be admin id)
-  $reportBody = @{ studentId = $studentId; teacherId = $adminUserId; comments='Improving in math'; improvementPlan='Practice 30m/day'; term='2025-Q1'; date=(Get-Date -Format 'yyyy-MM-dd'); branchId=$branchId }
-  $report = Invoke-Json 'http://localhost:9095/student-reports' 'POST' $reportBody $token
-  $reportId = $report.id
-  Write-Output "STUDENT_REPORT_ID: $reportId"
+  # 6) Student reports removed - skipped
 
   # 7) Create a ledger transaction for Kigali branch
   $txBody = @{ type='INCOME'; category='Tuition'; name='Term fees'; materials=@('books'); amount=1500.00; txDate=(Get-Date -Format 'yyyy-MM-dd'); notes='Term 1'; branchId=$branchId }

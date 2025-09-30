@@ -2,7 +2,7 @@ package org.sncrwanda.student.web;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sncrwanda.student.dto.StudentReportResponse;
+// Student reports removed
 import org.sncrwanda.student.dto.StudentResponse;
 import org.sncrwanda.student.security.SecurityUtils;
 import org.sncrwanda.student.service.GuardianPortalService;
@@ -36,7 +36,7 @@ public class GuardianPortalController {
 
     @GetMapping("/reports")
     @Operation(summary = "List my students' performance reports (guardian-only)")
-    public ResponseEntity<List<StudentReportResponse>> myReports(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<List<?>> myReports(@RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "20") int size) {
         if (!allowed()) return ResponseEntity.status(403).build();
         return ResponseEntity.ok(service.listMyReports(page, size));

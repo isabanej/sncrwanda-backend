@@ -3,6 +3,7 @@ org\sncrwanda\auth\exception\UnauthorizedException.class
 org\sncrwanda\auth\config\SecurityConfig.class
 org\sncrwanda\auth\web\AuthController.class
 org\sncrwanda\auth\domain\PasswordResetToken.class
+org\sncrwanda\auth\web\InternalPasswordController.class
 org\sncrwanda\auth\config\OpenApiConfig.class
 org\sncrwanda\auth\domain\User$UserBuilder.class
 org\sncrwanda\auth\exception\ConflictException.class
@@ -22,5 +23,6 @@ org\sncrwanda\auth\domain\User.class
 org\sncrwanda\auth\dto\UpdateUserRequest.class
 org\sncrwanda\auth\dto\ForgotPasswordRequest.class
 org\sncrwanda\auth\service\MailService.class
+org\sncrwanda\auth\config\DebugHashPrinter.class
 org\sncrwanda\auth\dto\UserResponse.class
 org\sncrwanda\auth\security\JwtUtil.class

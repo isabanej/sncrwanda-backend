@@ -194,16 +194,7 @@ try {
   }
   if ($student) { $studentId = $student.id; Write-Output "STUDENT_ID: $studentId" }
 
-  # 6) Student Report (teacherId use auth user)
-  if ($studentId) {
-    $reportBody = @{ studentId = $studentId; teacherId = $userId; comments='Improving in math'; improvementPlan='Practice 30m/day'; term='2025-Q1'; date=(Get-Date -Format 'yyyy-MM-dd'); branchId=$branchId }
-    try { $reports = Invoke-RestMethod -Uri 'http://localhost:9090/student-reports' -Method Get -Headers @{ Authorization = "Bearer $seedToken" } } catch { $reports = @() }
-    $report = $reports | Where-Object { $_.studentId -eq $studentId -and $_.term -eq '2025-Q1' } | Select-Object -First 1
-    if (-not $report) {
-      try { $report = Invoke-Json 'http://localhost:9090/student-reports' 'POST' $reportBody $seedToken } catch { try { $report = Invoke-Json 'http://localhost:9095/student-reports' 'POST' $reportBody $seedToken } catch {} }
-    }
-    if ($report) { $reportId = $report.id; Write-Output "STUDENT_REPORT_ID: $reportId" }
-  }
+  # 6) Student reports removed - skipped
 
   # 7) Ledger Transaction
   $txBody = @{ type='INCOME'; category='Tuition'; name='Term fees'; materials=@('books'); amount=1500.00; txDate=(Get-Date -Format 'yyyy-MM-dd'); notes='Term 1'; branchId=$branchId }
@@ -211,9 +202,7 @@ try {
   try { $empCount = (Invoke-RestMethod -Uri 'http://localhost:9090/hr/employees' -Method Get -Headers @{ Authorization = "Bearer $seedToken" }).Count } catch { $empCount = -1 }
   try { $studCount = (Invoke-RestMethod -Uri 'http://localhost:9090/students' -Method Get -Headers @{ Authorization = "Bearer $seedToken" }).Count } catch { $studCount = -1 }
   try { $txCount = (Invoke-RestMethod -Uri 'http://localhost:9090/transactions' -Method Get -Headers @{ Authorization = "Bearer $seedToken" }).Count } catch { $txCount = -1 }
-  try { $repCount = (Invoke-RestMethod -Uri 'http://localhost:9090/student-reports' -Method Get -Headers @{ Authorization = "Bearer $seedToken" }).Count } catch { $repCount = -1 }
-
-  Write-Output "COUNTS: employees=$empCount students=$studCount tx=$txCount reports=$repCount"
+  Write-Output "COUNTS: employees=$empCount students=$studCount tx=$txCount"
 
   try {
     $summary = Invoke-RestMethod -Uri 'http://localhost:9090/reports/summary' -Method Get -Headers @{ Authorization = "Bearer $token" }

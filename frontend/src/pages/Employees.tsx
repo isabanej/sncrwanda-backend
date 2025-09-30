@@ -28,6 +28,7 @@ interface ApiEmployee {
   startDate?: string
   endDate?: string
   createdAt?: string
+  updatedAt?: string
 }
 
 interface FormState {
@@ -90,7 +91,9 @@ function validateForm(f: FormState): Errors {
     if (!/^\+?\d{9,15}$/.test(phoneClean)) e.phone = 'Invalid phone'
   }
   if (f.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) e.email = 'Invalid email'
-  if (f.bankAccount && !/^\d{6,20}$/.test(f.bankAccount.replace(/\s+/g,''))) e.bankAccount = 'Invalid account number'
+  if (!f.bankName.trim()) e.bankName = 'Bank name is required'
+  if (!f.bankAccount.trim()) e.bankAccount = 'Account number is required'
+  else if (!/^\d{6,20}$/.test(f.bankAccount.replace(/\s+/g,''))) e.bankAccount = 'Invalid account number'
   return e
 }
 
@@ -117,6 +120,15 @@ const InfoIcon: React.FC<{ text: string }> = ({ text }) => {
 // Component ----------------------------------------------------------
 const EmployeesPage: React.FC = () => {
   const toast = useToast()
+
+  // Ensure newest (by updatedAt or createdAt) appear first consistently
+  const sortRecent = React.useCallback((list: ApiEmployee[]) => {
+    return [...list].sort((a,b)=> {
+      const ta = Date.parse(a.updatedAt || a.createdAt || '0')
+      const tb = Date.parse(b.updatedAt || b.createdAt || '0')
+      return tb - ta
+    })
+  }, [])
 
   // Map form field keys to human-friendly labels for error summaries
   const FIELD_LABELS: Record<keyof FormState, string> = {
@@ -195,8 +207,7 @@ const EmployeesPage: React.FC = () => {
     setLoading(true)
     listEmployees({ archived: archivedMode }).then(list => {
       if (!alive) return
-      // Backend now returns newest-first already (ordered by createdAt DESC) so no reverse needed.
-      setEmployees(list)
+      setEmployees(sortRecent(list))
     }).finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
   }, [archivedMode, reload])
@@ -320,15 +331,14 @@ const EmployeesPage: React.FC = () => {
       endDate: form.endDate || undefined,
       phone: form.phone || undefined,
       email: form.email || undefined,
-      bankName: form.bankName || undefined,
-      bankAccount: form.bankAccount ? form.bankAccount.replace(/\s+/g, '') : undefined,
+  bankName: form.bankName.trim(),
+  bankAccount: form.bankAccount.replace(/\s+/g, ''),
       department: { id: form.departmentId },
       branch: { id: form.branchId }
     }
     try {
   const created = await createEmployee(payload)
-  // Prepend so the newly created employee appears at the top (newest-first ordering)
-  setEmployees(list => [created, ...list])
+  setEmployees(list => sortRecent([created, ...list]))
   toast.show('Employee created', 'success')
   closeCreate()
     } catch (e) {
@@ -742,7 +752,7 @@ const EmployeesPage: React.FC = () => {
               <button type="button" className="chip-x" aria-label="Close" onClick={closeEdit} disabled={editSubmitting}>×</button>
             </div>
             <div className="modal-body">
-              <EditEmployeeForm form={editForm} setForm={setEditForm} errors={editErrors} setErrors={setEditErrors} touched={editTouched} setTouched={setEditTouched} submitting={editSubmitting} setSubmitting={setEditSubmitting} employeeId={editingEmployeeId!} onClose={closeEdit} branches={branches} departments={departments} onUpdated={(updated)=> setEmployees(list=> list.map(e=> e.id===updated.id? updated: e))} />
+              <EditEmployeeForm form={editForm} setForm={setEditForm} errors={editErrors} setErrors={setEditErrors} touched={editTouched} setTouched={setEditTouched} submitting={editSubmitting} setSubmitting={setEditSubmitting} employeeId={editingEmployeeId!} onClose={closeEdit} branches={branches} departments={departments} onUpdated={(updated)=> setEmployees(list=> sortRecent(list.map(e=> e.id===updated.id? updated: e)))} />
             </div>
           </div>
         </div>
@@ -796,7 +806,7 @@ const EmployeeFormFields: React.FC<{
             <input id={`${idPrefix}-fullName`} ref={el=>{ if(firstErrorRef && !firstErrorRef.current && errors.fullName) firstErrorRef.current = el }} value={form.fullName} placeholder="Enter full name" onBlur={()=>{ const v=validateAndSet('fullName'); if(!v.fullName) setForm(f=>f) }} onChange={e=>{ setForm(f=>({...f, fullName:e.target.value})); if(submitted) validateAndSet('fullName') }} />
           </Field>
           <Field id={`${idPrefix}-dob`} label={<span style={{display:'inline-flex', alignItems:'center', gap:6}}>Date of birth <InfoIcon text="Must be 18+ (Format: YYYY-MM-DD)" /></span>} required error={submitted||touched.dob?errors.dob:undefined}>
-            <DatePicker id={`${idPrefix}-dob`} name="dob" value={form.dob} unbounded defaultViewDate={new Date(new Date().getFullYear()-18, new Date().getMonth(), 1)} onChange={v=>{ setForm(f=>({...f, dob:v})); if(submitted) validateAndSet('dob') }} />
+            <DatePicker id={`${idPrefix}-dob`} name="dob" value={form.dob} unbounded keepOpenUntilSelect defaultViewDate={new Date(new Date().getFullYear()-18, new Date().getMonth(), 1)} onChange={v=>{ setForm(f=>({...f, dob:v})); if(submitted) validateAndSet('dob') }} />
           </Field>
           <Field id={`${idPrefix}-phone`} label={<span style={{display:'inline-flex', alignItems:'center', gap:6}}>Phone <InfoIcon text="Rwanda format: +2507XXXXXXXX (9 digits)" /></span>} error={submitted||touched.phone?errors.phone:undefined}>
             <PhoneInput id={`${idPrefix}-phone`} value={form.phone} onChange={v=>{ setForm(f=>({...f, phone:v})); if(submitted) validateAndSet('phone') }} onBlur={()=>{ const v=validateAndSet('phone'); if(!v.phone) setForm(f=>f) }} noInlineValidation placeholder="+2507XXXXXXXX" />
@@ -832,10 +842,10 @@ const EmployeeFormFields: React.FC<{
             <input id={`${idPrefix}-salary`} type="number" value={form.salary} placeholder="0" onBlur={()=>{ const v=validateAndSet('salary'); if(!v.salary) setForm(f=>f) }} onChange={e=>{ setForm(f=>({...f, salary:e.target.value})); if(submitted) validateAndSet('salary') }} />
           </Field>
             <Field id={`${idPrefix}-startDate`} label="Start date" error={submitted||touched.startDate?errors.startDate:undefined}>
-              <DatePicker id={`${idPrefix}-startDate`} name="startDate" value={form.startDate} unbounded onChange={v=>{ setForm(f=>({...f, startDate:v})); if(submitted) validateAndSet('startDate') }} />
+              <DatePicker id={`${idPrefix}-startDate`} name="startDate" value={form.startDate} unbounded keepOpenUntilSelect onChange={v=>{ setForm(f=>({...f, startDate:v})); if(submitted) validateAndSet('startDate') }} />
             </Field>
             <Field id={`${idPrefix}-endDate`} label="End date" error={submitted||touched.endDate?errors.endDate:undefined}>
-              <DatePicker id={`${idPrefix}-endDate`} name="endDate" value={form.endDate} unbounded defaultViewDate={form.startDate ? new Date(Number(form.startDate.slice(0,4)), Number(form.startDate.slice(5,7)) - 1, 1) : undefined} onChange={v=>{ setForm(f=>({...f, endDate:v})); if(submitted) validateAndSet('endDate') }} />
+              <DatePicker id={`${idPrefix}-endDate`} name="endDate" value={form.endDate} unbounded keepOpenUntilSelect defaultViewDate={form.startDate ? new Date(Number(form.startDate.slice(0,4)), Number(form.startDate.slice(5,7)) - 1, 1) : undefined} onChange={v=>{ setForm(f=>({...f, endDate:v})); if(submitted) validateAndSet('endDate') }} />
             </Field>
         </div>
         <div className="field-stack">

@@ -1,6 +1,7 @@
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\config\OpenApiConfig.java
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\config\SecurityConfig.java
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\dto\ReportSummaryResponse.java
+C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\dto\StudentSummaryResponse.java
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\ReportingApplication.java
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\security\SecurityUtils.java
 C:\dev\sncrwanda-backend\reporting-service\src\main\java\org\sncrwanda\reporting\service\ReportingService.java

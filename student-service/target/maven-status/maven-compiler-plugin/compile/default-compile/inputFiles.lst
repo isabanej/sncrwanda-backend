@@ -1,5 +1,6 @@
 C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\config\OpenApiConfig.java
 C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\config\SecurityConfig.java
+C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\config\StudentDataInitializer.java
 C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\Guardian.java
 C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\Need.java
 C:\dev\sncrwanda-backend\student-service\src\main\java\org\sncrwanda\student\domain\ScheduleItem.java

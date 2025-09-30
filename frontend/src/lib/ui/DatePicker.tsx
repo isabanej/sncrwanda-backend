@@ -10,6 +10,8 @@ type Props = {
   required?: boolean
   // If true, do not auto-close when user types a valid date; only close when a day button is clicked or Escape pressed.
   keepOpenUntilSelect?: boolean
+  // If true, keep calendar open even after a day is picked until user presses Escape or clicks the close button.
+  persistent?: boolean
   // When true, do not limit the selectable date range (DOB and similar)
   unbounded?: boolean
   // When provided, controls the initial calendar month/year to show when no value is selected
@@ -34,7 +36,7 @@ function parseISODate(s?: string | null): Date | null {
 // Monday-first header labels to match cheatsheet look (Mon-Sun)
 const WEEKDAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
 
-export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur, placeholder = 'YYYY-MM-DD', required, keepOpenUntilSelect = false, unbounded = false, defaultViewDate, ...aria }) => {
+export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur, placeholder = 'YYYY-MM-DD', required, keepOpenUntilSelect = false, persistent = false, unbounded = false, defaultViewDate, ...aria }) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -52,16 +54,19 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
 
   useEffect(() => { if (selected) { setView(new Date(selected.getFullYear(), selected.getMonth(), 1)); setCursor(new Date(selected)) } }, [selected])
 
+  // Stable mode: when keepOpenUntilSelect is true we keep the popover open regardless
+  // of selection or outside click so user can review/change without accidental close.
+  const effectiveSticky = keepOpenUntilSelect || persistent
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapperRef.current) return
       if (wrapperRef.current.contains(e.target as Node)) return
-      // Only close on outside click if not forced to stay open until selection
-      if (!keepOpenUntilSelect) setOpen(false)
+      // Close on outside click once a selection exists or flag is false
+      if (!effectiveSticky) setOpen(false)
     }
     if (open) document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
-  }, [open, keepOpenUntilSelect])
+  }, [open, effectiveSticky])
 
   // If the user types a complete, valid date within range, close the popover immediately
   useEffect(() => {
@@ -72,9 +77,9 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
     if (inRange) {
       setView(new Date(dt.getFullYear(), dt.getMonth(), 1))
       setCursor(new Date(dt))
-      if (!keepOpenUntilSelect) setOpen(false)
+      if (!effectiveSticky) setOpen(false)
     }
-  }, [value, open, minDate, maxDate, keepOpenUntilSelect])
+  }, [value, open, minDate, maxDate, effectiveSticky])
 
   // Ensure cursor stays within range
   function clampDate(d: Date) {
@@ -109,7 +114,7 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
   function pick(d: Date) {
     const iso = toISODate(d)
     onChange(iso)
-    setOpen(false)
+    if(!persistent) setOpen(false)
     // Trigger validation if parent provided
     if (onBlur && inputRef.current) onBlur({
       ...({} as any),
@@ -205,7 +210,7 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
           <div style={{ position:'absolute', left:'-9999px', width:1, height:1, overflow:'hidden' }} aria-live="polite">
             {new Date(view.getFullYear(), view.getMonth(), 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
           </div>
-          <div className="cal-header">
+          <div className="cal-header" style={{position:'relative'}}>
             {(() => {
               const prevFirst = new Date(view.getFullYear(), view.getMonth()-1, 1)
               const prevDisabled = prevFirst < new Date(minDate.getFullYear(), minDate.getMonth(), 1)
@@ -246,6 +251,7 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
                 })()}
               </select>
             </div>
+            {persistent && <button type="button" aria-label="Close calendar" onClick={()=>{ setOpen(false); inputRef.current?.focus() }} style={{position:'absolute',right:4,top:4,background:'#f1f5f9',border:'1px solid var(--line-strong)',borderRadius:6,padding:'2px 6px',cursor:'pointer',fontSize:12,fontWeight:600}}>×</button>}
             {(() => {
               const nextFirst = new Date(view.getFullYear(), view.getMonth()+1, 1)
               const nextDisabled = nextFirst > maxDate
@@ -263,7 +269,10 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
             <div className="cal-sep" aria-hidden="true" />
             <div className="cal-grid" role="grid" aria-label="Calendar">
             {days.map(({ date: d, inMonth, isSelected, isToday }, idx) => {
-              const disabled = d > maxDate || d < minDate
+              const tooYoung = d > maxDate
+              const tooOld = d < minDate
+              const disabled = tooYoung || tooOld
+              const disableReason = tooYoung ? 'Date less than 4 years ago (too young)' : (tooOld ? 'Date more than 15 years ago (too old)' : undefined)
               const isWeekend = d.getDay() === 0 || d.getDay() === 6 // Sun or Sat
               return (
               <button
@@ -281,6 +290,8 @@ export const DatePicker: React.FC<Props> = ({ id, name, value, onChange, onBlur,
                 onMouseDown={e => e.preventDefault()}
                 onClick={() => { if (!disabled) pick(d) }}
                 aria-disabled={disabled}
+                title={disableReason}
+                aria-label={disabled ? `${d.getDate()} ${d.toLocaleString(undefined,{month:'long'})} ${d.getFullYear()} (${disableReason})` : undefined}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !disabled) { e.preventDefault(); pick(d); return }
                     switch (e.key) {

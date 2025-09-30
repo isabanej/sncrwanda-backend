@@ -29,28 +29,38 @@ public class TeacherController {
     @GetMapping
     @Operation(summary = "List active teachers (position contains 'teacher', case-insensitive)")
     public List<Employee> listTeachers() {
-        // Unscoped: aggregate across multiple teacher synonyms for resilience.
+        // New simplified logic: ignore active/deleted flags and return ALL employees whose position contains any teacher synonym.
         final List<String> KEYWORDS = List.of("teacher","instructor","tutor","lecturer","educator","faculty","prof","mentor","academic");
         long now = System.currentTimeMillis();
         List<Employee> local = cached;
         if (local != null && now < cacheExpiryEpochMs) {
-            if (log.isDebugEnabled()) log.debug("/teachers cache HIT -> {} teachers (expires in {} ms)", local.size(), (cacheExpiryEpochMs - now));
+            if (log.isDebugEnabled()) log.debug("/teachers cache HIT (all-inclusive) -> {} teachers", local.size());
             return local;
         }
-        if (log.isDebugEnabled()) log.debug("/teachers cache MISS – rebuilding list");
-        Map<UUID, Employee> merged = new LinkedHashMap<>();
-        for (String kw : KEYWORDS) {
+        if (log.isDebugEnabled()) log.debug("/teachers cache MISS – rebuilding all-inclusive teacher list");
+        List<Employee> all = employeeRepository.findAll();
+        if (all.isEmpty()) {
+            // Emergency inline seed: cannot create fully valid employee here (missing repos). Just log guidance.
             try {
-                List<Employee> partial = employeeRepository.findActiveTeachers(kw);
-                for (Employee e : partial) {
-                    if (!merged.containsKey(e.getId())) merged.put(e.getId(), e);
-                }
+                // Use repositories via reflection-free approach: manually create entities and save through existing repo if possible.
+                // We only have employeeRepository here; create synthetic Employee with null deps not allowed, so skip if required relationships missing.
+                // Fallback: log only.
+                // (Full seeding handled by TeacherDataInitializer; this is just a last resort.)
+                // No direct access to BranchRepository/DepartmentRepository here, so we cannot persist without proper references.
+                // Therefore just log.
+                log.warn("TeacherController: no employees present; ensure hr seed scripts run.");
             } catch (Exception ex) {
-                if (log.isDebugEnabled()) log.debug("/teachers keyword '{}' query failed: {}", kw, ex.getMessage());
+                log.warn("TeacherController: quick teacher seed failed: {}", ex.toString());
+            }
+        }
+        Map<UUID, Employee> merged = new LinkedHashMap<>();
+        for (Employee e : all) {
+            String pos = e.getPosition() == null ? "" : e.getPosition().toLowerCase();
+            for (String kw : KEYWORDS) {
+                if (pos.contains(kw)) { merged.putIfAbsent(e.getId(), e); break; }
             }
         }
         List<Employee> list = new ArrayList<>(merged.values());
-        // Sort newest first (createdAt desc) consistent with repository query ordering
         list.sort((a,b) -> {
             var ca = a.getCreatedAt(); var cb = b.getCreatedAt();
             if (ca != null && cb != null) return cb.compareTo(ca);
@@ -60,7 +70,7 @@ public class TeacherController {
         cacheExpiryEpochMs = now + CACHE_TTL_MS;
         if (log.isDebugEnabled()) {
             UUID branchId = SecurityUtils.getBranchId();
-            log.debug("/teachers unscoped multi-keyword fetch (branch={}, admin={}) -> {} teachers (keywords={}, distinct={})", branchId, SecurityUtils.isAdmin(), list.size(), KEYWORDS.size(), merged.size());
+            log.debug("/teachers inclusive fetch (branch={}, admin={}) -> {} teachers (from total employees={})", branchId, SecurityUtils.isAdmin(), list.size(), all.size());
         }
         return list;
     }

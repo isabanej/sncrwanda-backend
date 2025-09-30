@@ -63,6 +63,11 @@ const Reports: React.FC = () => {
 
   const isTeacher = !!user?.roles?.includes('TEACHER') && !isAdmin
 
+  // UUID validator (RFC 4122 variants 1-5). Used to ensure we never send invalid
+  // placeholder / free‑text filters to the backend (which would trigger 400
+  // conversion errors like: Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID').
+  const UUID_RE = useMemo(()=> /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, [])
+
   // Load data (supports client or server paging)
   // Debug utilities (test instrumentation)
   function dbg(...args: any[]){
@@ -103,8 +108,16 @@ const Reports: React.FC = () => {
           if (pageSize) params.set('size', String(pageSize))
           if (showArchived) params.set('archived','true')
           if (filter.trim()) params.set('q', filter.trim())
-          if (studentFilter.trim()) params.set('student', studentFilter.trim())
-          if (teacherFilter.trim()) params.set('teacher', teacherFilter.trim())
+          // Only send student / teacher filter params if they are valid UUIDs.
+          // (Front-end free text name filtering remains client-side until server supports partial name search.)
+          if (studentFilter.trim()) {
+            const val = studentFilter.trim()
+            if (UUID_RE.test(val)) params.set('student', val)
+          }
+          if (teacherFilter.trim()) {
+            const val = teacherFilter.trim()
+            if (UUID_RE.test(val)) params.set('teacher', val)
+          }
           if (termFilter.trim()) params.set('term', termFilter.trim())
           if (sortDir && sortKey){ params.set('sort', `${sortKey},${sortDir}`) }
           const url = '/student-reports?'+params.toString()
@@ -116,63 +129,17 @@ const Reports: React.FC = () => {
         try { studs = await api.get<Student[]>('/students', token) } catch(e:any){ if(!(e instanceof ApiError && e.status===404)) throw e }
         try { emps = await api.get<any[]>('/hr/employees', token) } catch(e:any){ if(!(e instanceof ApiError && e.status===404)) throw e }
       } else {
-        // Parallel fetch for non-paging path
-        const [repRes, studsPrimary, teacherPrimary] = await Promise.all([
-          (async ()=>{ try { return await api.get<Report[]>(showArchived? '/student-reports?archived=true':'/student-reports', token) } catch(e:any){ if(e instanceof ApiError && [0,502,503,504].includes(e.status)){ try { return await api.get<Report[]>(showArchived? '/_student/student-reports?archived=true':'/_student/student-reports', token) } catch{} } if(!(e instanceof ApiError && e.status===404)) throw e; return [] } })(),
-          (async ()=>{ try { return await api.get<Student[]>('/students', token) } catch(e:any){ if(e instanceof ApiError && [0,502,503,504].includes(e.status)){ try { return await api.get<Student[]>(showArchived? '/_student/students?archived=true':'/_student/students', token) } catch{} } if(!(e instanceof ApiError && e.status===404)) throw e; return [] } })(),
-          // Teachers endpoint: treat 5xx as non-fatal; mark error and fallback later
-          (async ()=>{ try {
-              return await api.get<any[]>('/hr/teachers', token)
-            } catch(e:any){
-              // Single retry (brief) for transient 5xx before declaring error
-              const shouldRetry = e instanceof ApiError && [0,500,502,503,504].includes(e.status)
-              if(shouldRetry){
-                try { await new Promise(r=>setTimeout(r, 250)); return await api.get<any[]>('/hr/teachers', token) } catch{}
-              }
-              if(e instanceof ApiError){
-                if([0,500,502,503,504].includes(e.status)){
-                  teacherFetchError = true
-                  try { return await api.get<any[]>('/_hr/teachers', token) } catch{}
-                  return '__TEACHERS_ENDPOINT_ERROR__' as any
-                }
-                if(e.status===404){ return '__TEACHERS_ENDPOINT_MISSING__' as any }
-              }
-              teacherFetchError = true
-              return '__TEACHERS_ENDPOINT_ERROR__' as any
-            } })(),
+        // Simplified: rely on new lightweight endpoints
+        const [repRes, studentOpts, teacherOpts] = await Promise.all([
+          (async ()=>{ try { return await api.get<Report[]>(showArchived? '/student-reports?archived=true':'/student-reports', token) } catch(e:any){ if(!(e instanceof ApiError && e.status===404)) throw e; return [] } })(),
+          (async ()=>{ try { return await api.get<any[]>('/students/select', token) } catch(e:any){ if(!(e instanceof ApiError && e.status===404)) throw e; return [] } })(),
+          (async ()=>{ try { return await api.get<any[]>('/hr/teachers', token) } catch(e:any){ teacherFetchError = true; return [] } })(),
         ])
-        // Secondary fallback if primary successful but returned empty (e.g., mis-routed gateway path returning 200 [])
-        let studsRes = studsPrimary
-        if((studsRes?.length||0)===0){
-          try { const fb = await api.get<Student[]>(showArchived? '/_student/students?archived=true':'/_student/students', token); if(fb?.length){ dbg('students:fallbackUsed', fb.length); studsRes = fb } } catch {}
-        }
-        let teacherRes: any[] | string = teacherPrimary
-        if(teacherRes === '__TEACHERS_ENDPOINT_MISSING__'){
-          // Fallback: fetch employees and filter client-side like before
-          dbg('teachers:fallbackEmployees')
-          try {
-            teacherRes = await api.get<any[]>('/hr/employees', token)
-          } catch(e:any){
-            if(e instanceof ApiError && [0,502,503,504].includes(e.status)){
-              try { teacherRes = await api.get<any[]>('/_hr/employees', token) } catch{}
-            }
-            if(!Array.isArray(teacherRes)) teacherRes = []
-          }
-        } else if(teacherRes === '__TEACHERS_ENDPOINT_ERROR__'){
-          dbg('teachers:error-fallback-employees')
-          try {
-            teacherRes = await api.get<any[]>('/hr/employees', token)
-          } catch(e:any){
-            if(e instanceof ApiError && [0,502,503,504].includes(e.status)){
-              try { teacherRes = await api.get<any[]>('/_hr/employees', token) } catch{}
-            }
-            if(!Array.isArray(teacherRes)) teacherRes = []
-          }
-        } else if(Array.isArray(teacherRes) && teacherRes.length===0){
-          // Endpoint exists but empty; attempt prefixed fallback
-            try { const fbT = await api.get<any[]>('/_hr/teachers', token); if(fbT?.length){ dbg('teachers:prefixFallbackUsed', fbT.length); teacherRes = fbT } } catch {}
-        }
-        rep = repRes||[]; studs = studsRes||[]; emps = Array.isArray(teacherRes)? teacherRes : [] ; setServerTotal(undefined)
+        rep = repRes||[];
+        // Map lightweight student options into Student shape expected elsewhere
+        studs = (studentOpts||[]).map((o:any)=> ({ id:o.id, childName:o.name }))
+        emps = teacherOpts||[];
+        setServerTotal(undefined)
       }
       if(on){
         setReports(rep||[])
@@ -185,30 +152,11 @@ const Reports: React.FC = () => {
           return !inactive && !deleted
         })
         setStudents(filteredStudents)
-        // Broader teacher keyword matching (enhanced) + fallback if none match
-        // Backend already filtered to teachers (position contains 'teacher') OR fallback produced employees list we must filter here.
-        let rawTeachers = (emps||[])
-        // If teacher endpoint returned empty, try employees as ultimate fallback
-        if(rawTeachers.length===0){
-          try {
-            dbg('teachers:ultimateEmployeesFallback')
-            rawTeachers = await api.get<any[]>('/hr/employees', token).catch(async (e:any)=>{
-              if(e instanceof ApiError && [0,502,503,504].includes(e.status)){
-                try { return await api.get<any[]>('/_hr/employees', token) } catch{}
-              }
-              return []
-            }) || []
-          } catch { rawTeachers = [] }
-        }
+        // Teachers now delivered already filtered by backend
+        const rawTeachers = (emps||[])
         setAllEmployees(rawTeachers)
-        try { dbg('teachers:raw', rawTeachers.length, JSON.stringify(rawTeachers.slice(0,3).map(e=>({id:e.id,pos:e.position,active:e.active})))) } catch {}
-        const activeOnly = rawTeachers.filter(e=> !(e.active===false) && !(e as any).deleted && !(e as any).isDeleted && !(e as any).archived)
-        const needClientFilter = !activeOnly.every(e => (e.position||'').toLowerCase().includes('teacher'))
-        const finalTeachers = needClientFilter ? activeOnly.filter(e=> (e.position||'').toLowerCase().includes('teacher')) : activeOnly
-        if(!needClientFilter) dbg('teachers:backendFiltered', finalTeachers.length)
-        if(needClientFilter && finalTeachers.length===0 && activeOnly.length>0){ dbg('teachers:clientFilterEmpty', activeOnly.length) }
+        const finalTeachers = rawTeachers.filter(e=> !(e.active===false) && !(e as any).deleted && !(e as any).isDeleted && !(e as any).archived)
         setTeachers(finalTeachers)
-        if(finalTeachers.length===0 && activeOnly.length>0){ dbg('teachers:positions', activeOnly.map(e=>e.position)) }
   if(filteredStudents.length===0){ dbg('students:emptyRaw', rawStudents.length) } else { dbg('students:first', JSON.stringify(filteredStudents.slice(0,3))) }
         // Decide if we surface a warning: only if teacher endpoint failed AND we have zero final teachers
         if(teacherFetchError && finalTeachers.length===0){
@@ -222,7 +170,17 @@ const Reports: React.FC = () => {
     } catch(e:any){
       dbg('load:error', e?.message)
       if(e instanceof ApiError && (e.status===401||e.status===403)){ toast.show(MSG.sessionExpired,'error'); logout(); navigate('/login',{replace:true}); return }
-      setError(e?.message||'Failed to load reports')
+      let msg = e?.message||'Failed to load reports'
+      if(/invalid uuid/i.test(msg) || /Failed to convert value of type 'java\.lang\.String' to required type 'java\.util\.UUID'/i.test(msg)){
+        // Only blame user filters when we actually attempted to send UUID-based filters via server paging.
+        if(SERVER_PAGING && (studentFilter.trim() || teacherFilter.trim())){
+          msg = 'Some filter value is invalid. Please clear filters and try again.'
+        } else {
+          // More generic guidance when the error originates from a backend endpoint unrelated to current filters
+          msg = 'Data load issue (invalid identifier encountered). Please refresh. If it persists contact support.'
+        }
+      }
+      setError(msg)
     } finally { setLoading(false); dbg('load:end'); loadingRef.current=false }
   })(); return ()=>{ on=false } }, [token, reload, showArchived, SERVER_PAGING, page, pageSize, sortKey, sortDir, filter, studentFilter, teacherFilter, termFilter])
 
@@ -320,8 +278,8 @@ const Reports: React.FC = () => {
   useEffect(()=>{ try {
     const ps = localStorage.getItem('reports.pageSize'); if(ps){ const n=parseInt(ps); if(!isNaN(n)) setPageSize(n) }
     const f = localStorage.getItem('reports.f.filter'); if(f) setFilter(f)
-    const sf = localStorage.getItem('reports.f.student'); if(sf) setStudentFilter(sf)
-    const tf = localStorage.getItem('reports.f.teacher'); if(tf) setTeacherFilter(tf)
+  const sf = localStorage.getItem('reports.f.student'); if(sf && sf !== 'select') setStudentFilter(sf)
+  const tf = localStorage.getItem('reports.f.teacher'); if(tf && tf !== 'select') setTeacherFilter(tf)
     const tmf = localStorage.getItem('reports.f.term'); if(tmf) setTermFilter(tmf)
     const sk = localStorage.getItem('reports.sort.key') as SortKey | null; if(sk) setSortKey(sk)
     const sd = localStorage.getItem('reports.sort.dir') as 'asc'|'desc'|undefined|null; if(sd) setSortDir(sd as any)
@@ -443,8 +401,8 @@ const Reports: React.FC = () => {
           <div className="modal-body">
             <form className="form-modern" onSubmit={e=>{ e.preventDefault(); saveModal() }} noValidate>
               {(!students.length || !teachers.length) && <div className="helper" style={{background:'#fff8e1',border:'1px solid #f0d48a',padding:8,marginBottom:12}}>
-                {!students.length && <div>No active students available. Create students first.</div>}
-                {!teachers.length && <div>No active teachers available. Add an employee whose position contains 'teacher'.</div>}
+                {!students.length && <div>No active students found.</div>}
+                {!teachers.length && <div>No active teachers found.</div>}
               </div>}
               <div className="form-2col">
                 <div className="field">
@@ -470,7 +428,7 @@ const Reports: React.FC = () => {
                         <option value="">Select teacher…</option>
                         {teachers.map(t=> <option key={t.id} value={t.id}>{t.fullName}</option>)}
                       </select>
-                      {teachers.length===0 && !modal.busy && <div className="helper" style={{marginTop:4}} aria-live="polite">No active employees matched teacher keywords. Ensure at least one active employee has a position containing: teacher, teach, instructor, tutor, lecturer, educator, faculty, prof, mentor, staff, academic.</div>}
+                      {teachers.length===0 && !modal.busy && <div className="helper" style={{marginTop:4}} aria-live="polite">No active teachers available.</div>}
                       {modal.errors.teacherId && <div id="err-report-teacher" className="error" role="alert" aria-live="assertive">{modal.errors.teacherId}</div>}
                     </>
                   )}

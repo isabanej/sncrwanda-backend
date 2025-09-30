@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "schedule_items", indexes = {
-        @Index(name = "idx_schedule_branch_month", columnList = "branch_id, month")
+    @Index(name = "idx_schedule_branch_month", columnList = "branch_id, month_key")
 })
 @Data
 @NoArgsConstructor
@@ -26,7 +26,7 @@ public class ScheduleItem {
     private UUID branchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     // Format: YYYY-MM (e.g., 2025-09)
-    @Column(nullable = false, length = 7)
+    @Column(name = "month_key", nullable = false, length = 7)
     private String month;
 
     // 0-based week index within the month (0..4)
@@ -55,9 +55,11 @@ public class ScheduleItem {
     private String imageUrl;
 
     @Column(name = "created_at", nullable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Organization/tenant identifier (global default for now)
     @Column(name = "org_id", nullable = false)
+    @Builder.Default
     private UUID orgId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 }

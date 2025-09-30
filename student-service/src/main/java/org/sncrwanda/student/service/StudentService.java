@@ -33,6 +33,16 @@ public class StudentService {
         return raw.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    // New: include deleted/archived students as well (explicit for selection UI per latest request)
+    public List<StudentResponse> listAllIncludingDeleted() {
+        List<Student> raw = studentRepo.findAll();
+        try {
+            org.slf4j.LoggerFactory.getLogger(StudentService.class)
+                .info("listAllIncludingDeleted students total={} (includes archived)", raw.size());
+        } catch (Exception ignore) {}
+        return raw.stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     // Internal diagnostic: returns raw active students without branch filtering (admin guarded at controller level)
     public List<Student> _debugAllActive() {
         return studentRepo.findAllActive();
@@ -98,7 +108,7 @@ public class StudentService {
             deleterName = java.util.Objects.toString(nameClaim, null);
             deleterPhone = java.util.Objects.toString(phoneClaim, null);
         }
-        int affected = studentRepo.softDelete(id, userId, deleterName, deleterPhone);
+        int affected = studentRepo.softDelete(id, userId, deleterName, deleterPhone, java.time.Instant.now());
         return affected > 0;
     }
 

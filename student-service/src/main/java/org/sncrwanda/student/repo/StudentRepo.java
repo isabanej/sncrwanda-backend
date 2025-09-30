@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 import java.util.List;
+import java.time.Instant;
 public interface StudentRepo extends JpaRepository<Student, UUID> {
     List<Student> findByBranchId(UUID branchId);
     List<Student> findByGuardian_Id(UUID guardianId);
@@ -28,8 +29,8 @@ public interface StudentRepo extends JpaRepository<Student, UUID> {
 
     @Transactional
     @Modifying
-    @Query("update Student s set s.isDeleted = true, s.deletedAt = CURRENT_TIMESTAMP, s.deletedBy = ?2, s.deletedByName = ?3, s.deletedByPhone = ?4 where s.id = ?1 and s.isDeleted = false")
-    int softDelete(UUID id, UUID deletedBy, String deletedByName, String deletedByPhone);
+    @Query("update Student s set s.isDeleted = true, s.deletedAt = ?5, s.deletedBy = ?2, s.deletedByName = ?3, s.deletedByPhone = ?4 where s.id = ?1 and s.isDeleted = false")
+    int softDelete(UUID id, UUID deletedBy, String deletedByName, String deletedByPhone, Instant deletedAt);
 
     @Transactional
     @Modifying

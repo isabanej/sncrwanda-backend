@@ -1,6 +1,7 @@
 package org.sncrwanda.reporting.service;
 
 import org.sncrwanda.reporting.dto.ReportSummaryResponse;
+import org.sncrwanda.reporting.dto.StudentSummaryResponse;
 import org.sncrwanda.reporting.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,7 +24,8 @@ public class ReportingService {
         String stuSql = admin ? "select count(*) from student.students" : "select count(*) from student.students where branch_id = ?";
         String txSql  = admin ? "select count(*) from ledger.transactions" : "select count(*) from ledger.transactions where branch_id = ?";
         String txSumSql = admin ? "select coalesce(sum(amount),0) from ledger.transactions" : "select coalesce(sum(amount),0) from ledger.transactions where branch_id = ?";
-        String repSql = admin ? "select count(*) from student.student_reports" : "select count(*) from student.student_reports where branch_id = ?";
+    // Student reports feature removed; report count set to 0
+    String repSql = "select 0";
 
         Long employeeCount = queryForLong(empSql, branchId, admin);
         Long studentCount = queryForLong(stuSql, branchId, admin);
@@ -37,6 +39,22 @@ public class ReportingService {
         r.setTotalTransactionAmount(total != null ? total : BigDecimal.ZERO);
         r.setStudentReportCount(reportCount != null ? reportCount : 0);
         return r;
+    }
+
+    public StudentSummaryResponse getStudentSummary() {
+        StudentSummaryResponse s = new StudentSummaryResponse();
+        java.util.UUID branchId = SecurityUtils.getBranchId();
+        boolean admin = SecurityUtils.isAdmin();
+        String totalSql = admin ? "select count(*) from student.students" : "select count(*) from student.students where branch_id = ?";
+        String deletedSql = admin ? "select count(*) from student.students where is_deleted = true" : "select count(*) from student.students where is_deleted = true and branch_id = ?";
+        Long total = queryForLong(totalSql, branchId, admin);
+        Long deleted = queryForLong(deletedSql, branchId, admin);
+        long t = total != null ? total : 0L;
+        long d = deleted != null ? deleted : 0L;
+        s.setTotalStudents(t);
+        s.setDeletedStudents(d);
+        s.setActiveStudents(Math.max(0, t - d));
+        return s;
     }
 
     private Long queryForLong(String sql, UUID branchId, boolean admin) {

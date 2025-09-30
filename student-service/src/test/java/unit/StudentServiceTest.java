@@ -32,7 +32,7 @@ class StudentServiceTest {
     @InjectMocks StudentService service;
 
     @Test
-    void create_nonAdmin_requiresMatchingBranch() {
+    void create_preservesProvidedBranch_evenForNonAdmin() {
         UUID userBranch = UUID.randomUUID();
         UUID guardianId = UUID.randomUUID();
         Guardian g = Guardian.builder().id(guardianId).fullName("P").phone("078").build();
@@ -52,15 +52,17 @@ class StudentServiceTest {
             st.when(SecurityUtils::isAdmin).thenReturn(false);
             st.when(SecurityUtils::getBranchId).thenReturn(userBranch);
 
-            // mismatch branch -> error
-            req.setBranchId(UUID.randomUUID());
-            assertThrows(RuntimeException.class, () -> service.create(req));
+            // arbitrary branch (mismatch formerly rejected) now accepted
+            UUID arbitraryBranch = UUID.randomUUID();
+            req.setBranchId(arbitraryBranch);
+            StudentResponse resp1 = service.create(req);
+            assertEquals(arbitraryBranch, resp1.getBranchId());
 
-            // match branch -> success
-            req.setBranchId(userBranch);
-            StudentResponse resp = service.create(req);
-            assertNotNull(resp.getId());
-            assertEquals(userBranch, resp.getBranchId());
+            // Provided different branch again also accepted
+            UUID secondBranch = UUID.randomUUID();
+            req.setBranchId(secondBranch);
+            StudentResponse resp2 = service.create(req);
+            assertEquals(secondBranch, resp2.getBranchId());
         }
     }
 }

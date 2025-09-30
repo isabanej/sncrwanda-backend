@@ -45,7 +45,8 @@ public class StudentReportController {
         return service.listAll(page, size, archived);
     }
 
-    @GetMapping("/{id}")
+    // Constrain ID to UUID format to prevent static path fragments from being misinterpreted
+    @GetMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Get report by ID (scoped by branch for non-admin)")
     public ResponseEntity<StudentReportResponse> get(@PathVariable UUID id) {
         Optional<StudentReportResponse> r = service.getById(id);
@@ -60,7 +61,7 @@ public class StudentReportController {
         return service.listByStudent(studentId, page, size);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Update a student report")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
@@ -76,14 +77,14 @@ public class StudentReportController {
         return service.update(id, req).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9a-fA-F\\-]{36}}")
     @Operation(summary = "Archive (soft delete) a student report")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         boolean archived = service.delete(id);
         return archived ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/restore")
+    @PostMapping("/{id:[0-9a-fA-F\\-]{36}}/restore")
     @Operation(summary = "Restore an archived student report")
     public ResponseEntity<Void> restore(@PathVariable UUID id) {
         boolean restored = service.restore(id);
