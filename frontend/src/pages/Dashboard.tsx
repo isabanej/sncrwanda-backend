@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
 
       {user && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Welcome{user.username ? `, ${user.username}` : ''}</h3>
+          <h3 style={{ marginTop: 0 }}>Welcome{user.username ? `, ${user.username.charAt(0).toUpperCase()}${user.username.slice(1)}` : ''}</h3>
           <div className="helper">Here’s a quick snapshot of the system.</div>
         </div>
       )}

@@ -12,7 +12,6 @@ import Dashboard from './pages/Dashboard'
 import About from './pages/About'
 import Services from './pages/Services'
 import Students from './pages/Students'
-import Reports from './pages/Reports'
 import Employees from './pages/Employees'
 import Ledger from './pages/Ledger'
 import GuardianPortal from './pages/GuardianPortal'
@@ -63,7 +62,6 @@ createRoot(document.getElementById('root')!).render(
               <Route path="students" element={<RoleProtected roles={["ADMIN","TEACHER","SUPER_ADMIN"]}><Students /></RoleProtected>} />
               <Route path="guardians" element={<RoleProtected roles={["ADMIN","TEACHER","SUPER_ADMIN"]}><Guardians /></RoleProtected>} />
               <Route path="schedule" element={<RoleProtected roles={["ADMIN","TEACHER","SUPER_ADMIN"]}><Schedule /></RoleProtected>} />
-              <Route path="reports" element={<RoleProtected roles={["ADMIN","TEACHER","SUPER_ADMIN"]}><Reports /></RoleProtected>} />
               <Route path="employees" element={<RoleProtected roles={["ADMIN","SUPER_ADMIN"]}><Employees /></RoleProtected>} />
               <Route path="ledger" element={<RoleProtected roles={["ADMIN","SUPER_ADMIN"]}><Ledger /></RoleProtected>} />
               <Route path="guardian" element={<RoleProtected roles={["GUARDIAN","ADMIN"]}><GuardianPortal /></RoleProtected>} />

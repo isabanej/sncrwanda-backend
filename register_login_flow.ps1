@@ -10,7 +10,9 @@ try {
 
 $loginBody = Get-Content -Raw 'c:\dev\sncrwanda-backend\temp_login.json'
 try {
-  $login = Invoke-RestMethod -Uri 'http://localhost:9092/auth/login' -Method Post -Body $loginBody -ContentType 'application/json' -ErrorAction Stop
+  $payload = @{ usernameOrEmail = 'emino'; password = '123456' }
+  $json = $payload | ConvertTo-Json -Compress
+  $login = Invoke-RestMethod -Uri 'http://localhost:9092/auth/login' -Method Post -Body $json -ContentType 'application/json' -ErrorAction Stop
   Write-Output 'LOGIN_RESPONSE:'
   $login | ConvertTo-Json -Depth 5
   $token = $login.token

@@ -22,6 +22,8 @@ C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\service\A
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\service\MailService.java
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\AdminController.java
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\AuthController.java
+C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\CachedBodyHttpServletRequest.java
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\GlobalExceptionHandler.java
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\InternalPasswordController.java
 C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\JwksController.java
+C:\dev\sncrwanda-backend\auth-service\src\main\java\org\sncrwanda\auth\web\RequestBodyLoggingFilter.java

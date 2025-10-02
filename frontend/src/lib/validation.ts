@@ -150,19 +150,6 @@ export function validateStudentField<K extends keyof StudentInput>(field: K, val
   return undefined
 }
 
-// --- Reports ---
-export const ReportSchema = z.object({
-  studentId: z.string().trim().min(1, 'Student is required'),
-  teacherId: z.string().trim().min(1, 'Teacher is required'),
-  term: z.string().optional().or(z.literal('')),
-  date: z.string().optional().or(z.literal('')).refine(v => !v || dateRegex.test(v), MSG.dateFormat),
-  comments: z.string().optional().or(z.literal('')),
-  improvementPlan: z.string().optional().or(z.literal(''))
-})
-export type ReportInput = z.infer<typeof ReportSchema>
-export function validateReport(input: ReportInput) { const r = ReportSchema.safeParse(input); return r.success ? { valid: true as const } : { valid: false as const, errors: extractFieldErrors(r.error) } }
-export function validateReportField<K extends keyof ReportInput>(field: K, value: ReportInput[K]) { const r = ReportSchema.pick({ [field]: true } as any).safeParse({ [field]: value }); return r.success ? undefined : r.error.issues[0]?.message || 'Invalid value' }
-
 // --- Appointment (simple contact form) ---
 export const AppointmentSchema = z.object({
   name: z.string().trim().min(1, MSG.fullNameRequired),

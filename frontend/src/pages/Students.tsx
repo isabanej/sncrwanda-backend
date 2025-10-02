@@ -67,6 +67,7 @@ function hobbyColor(name: string): string {
 // Need color palette distinct from hobbies for clearer visual separation
 const NEED_PALETTE = ['#065f46','#065a60','#7c2d12','#5b21b6','#4d7c0f','#9d174d','#1e3a8a','#78350f','#374151','#047857']
 function needColor(code: string): string {
+  if (!code || typeof code !== 'string') return NEED_PALETTE[0] // Default color for invalid codes
   if (NEED_COLOR[code]) return NEED_COLOR[code]
   let h = 0; for (let i=0;i<code.length;i++) h = (h*41 + code.charCodeAt(i)) >>> 0;
   return NEED_PALETTE[h % NEED_PALETTE.length]
@@ -608,7 +609,7 @@ const Students: React.FC = () => {
                       working = FALLBACK_NEEDS_CODES.map(code => ({ code, label: NEED_LABEL[code] || code.replace(/_/g,' '), color: NEED_COLOR[code] || needColor(code) }))
                     }
                     const optCodes = new Set(working.map(o => o.code))
-                    const extras = modal.form.needs.filter(c => !optCodes.has(c)).map(code => ({ code, label: NEED_LABEL[code] || code.replace(/_/g,' '), color: NEED_COLOR[code] || needColor(code) }))
+                    const extras = modal.form.needs.filter(c => c && !optCodes.has(c)).map(code => ({ code, label: NEED_LABEL[code] || code.replace(/_/g,' '), color: NEED_COLOR[code] || needColor(code) }))
                     const all = [...working, ...extras]
                     return (
                       <>

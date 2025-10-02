@@ -34,3 +34,9 @@ services:
   hr: ${HR_BASE_URL:http://localhost:9094}
   student: ${STUDENT_BASE_URL:http://localhost:9095}
   reporting: ${REPORTING_BASE_URL:http://localhost:9096}
+
+# Toggle verbose request-body logging (default: false)
+gateway:
+  logging:
+    body:
+      enabled: false

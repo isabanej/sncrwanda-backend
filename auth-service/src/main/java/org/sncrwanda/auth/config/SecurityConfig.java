@@ -4,6 +4,7 @@ import org.sncrwanda.auth.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,11 +23,14 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@Profile("!test")
 public class SecurityConfig {
 
     @Autowired
@@ -55,8 +59,18 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN","SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults())
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())));
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+                // Return a simple JSON response for unauthorized requests and avoid sending WWW-Authenticate
+                jakarta.servlet.http.HttpServletResponse rsp = (jakarta.servlet.http.HttpServletResponse) response;
+                rsp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                rsp.setContentType("application/json;charset=UTF-8");
+                try {
+                    rsp.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Invalid or missing credentials\"}");
+                } catch (IOException e) {
+                    // ignore write failures on error path
+                }
+            }));
         return http.build();
     }
 

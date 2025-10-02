@@ -42,3 +42,8 @@ app:
   url-base: ${APP_URL_BASE:http://localhost:5173}
   mail:
     from: ${MAIL_FROM:no-reply@sncrwanda.local}
+
+# Toggle verbose request-body logging (default: false)
+  logging:
+    body:
+      enabled: false

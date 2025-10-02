@@ -1,0 +1,702 @@
+﻿[
+    {
+        "index":  1,
+        "time":  "2025-10-01T23:41:10.6229440-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  2,
+        "time":  "2025-10-01T23:41:10.9015129-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  3,
+        "time":  "2025-10-01T23:41:11.0520639-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  4,
+        "time":  "2025-10-01T23:41:11.1912922-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  5,
+        "time":  "2025-10-01T23:41:11.3484409-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  6,
+        "time":  "2025-10-01T23:41:11.5194750-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  7,
+        "time":  "2025-10-01T23:41:11.6894127-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  8,
+        "time":  "2025-10-01T23:41:11.8440631-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  9,
+        "time":  "2025-10-01T23:41:11.9831698-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  10,
+        "time":  "2025-10-01T23:41:12.1231574-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  11,
+        "time":  "2025-10-01T23:41:12.2613942-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  12,
+        "time":  "2025-10-01T23:41:12.4151033-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  13,
+        "time":  "2025-10-01T23:41:12.5548471-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  14,
+        "time":  "2025-10-01T23:41:12.7086196-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  15,
+        "time":  "2025-10-01T23:41:12.8646667-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  16,
+        "time":  "2025-10-01T23:41:13.0375416-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  17,
+        "time":  "2025-10-01T23:41:13.1907846-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  18,
+        "time":  "2025-10-01T23:41:13.3774285-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  19,
+        "time":  "2025-10-01T23:41:13.5463847-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  20,
+        "time":  "2025-10-01T23:41:13.7015465-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  21,
+        "time":  "2025-10-01T23:41:13.8565864-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  22,
+        "time":  "2025-10-01T23:41:14.0259771-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  23,
+        "time":  "2025-10-01T23:41:14.1667075-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  24,
+        "time":  "2025-10-01T23:41:14.3390768-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  25,
+        "time":  "2025-10-01T23:41:14.4916901-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  26,
+        "time":  "2025-10-01T23:41:14.6308101-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  27,
+        "time":  "2025-10-01T23:41:14.7893327-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  28,
+        "time":  "2025-10-01T23:41:14.9406266-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  29,
+        "time":  "2025-10-01T23:41:15.1108414-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  30,
+        "time":  "2025-10-01T23:41:15.2647079-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  31,
+        "time":  "2025-10-01T23:41:15.4213146-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  32,
+        "time":  "2025-10-01T23:41:15.5882918-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  33,
+        "time":  "2025-10-01T23:41:15.7287250-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  34,
+        "time":  "2025-10-01T23:41:15.8722878-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  35,
+        "time":  "2025-10-01T23:41:16.0259675-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  36,
+        "time":  "2025-10-01T23:41:16.2206404-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  37,
+        "time":  "2025-10-01T23:41:16.4520076-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  38,
+        "time":  "2025-10-01T23:41:16.6820766-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  39,
+        "time":  "2025-10-01T23:41:17.1608242-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  40,
+        "time":  "2025-10-01T23:41:17.3451615-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  41,
+        "time":  "2025-10-01T23:41:17.5313383-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  42,
+        "time":  "2025-10-01T23:41:17.7569135-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  43,
+        "time":  "2025-10-01T23:41:17.9318001-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  44,
+        "time":  "2025-10-01T23:41:18.0729768-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  45,
+        "time":  "2025-10-01T23:41:18.2117723-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  46,
+        "time":  "2025-10-01T23:41:18.3366999-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  47,
+        "time":  "2025-10-01T23:41:18.5058601-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  48,
+        "time":  "2025-10-01T23:41:18.6440845-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  49,
+        "time":  "2025-10-01T23:41:18.8057962-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  50,
+        "time":  "2025-10-01T23:41:18.9374472-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  51,
+        "time":  "2025-10-01T23:41:19.0768652-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  52,
+        "time":  "2025-10-01T23:41:19.2311001-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  53,
+        "time":  "2025-10-01T23:41:19.4077626-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  54,
+        "time":  "2025-10-01T23:41:19.5852511-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  55,
+        "time":  "2025-10-01T23:41:19.7208333-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  56,
+        "time":  "2025-10-01T23:41:19.8828150-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  57,
+        "time":  "2025-10-01T23:41:20.0469009-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  58,
+        "time":  "2025-10-01T23:41:20.2214473-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  59,
+        "time":  "2025-10-01T23:41:20.3731292-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  60,
+        "time":  "2025-10-01T23:41:20.5110947-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  61,
+        "time":  "2025-10-01T23:41:20.6700440-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  62,
+        "time":  "2025-10-01T23:41:20.8045792-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  63,
+        "time":  "2025-10-01T23:41:20.9456895-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  64,
+        "time":  "2025-10-01T23:41:21.1139185-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  65,
+        "time":  "2025-10-01T23:41:21.2536735-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  66,
+        "time":  "2025-10-01T23:41:21.3931592-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  67,
+        "time":  "2025-10-01T23:41:21.5648543-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  68,
+        "time":  "2025-10-01T23:41:21.7384497-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  69,
+        "time":  "2025-10-01T23:41:21.8885500-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  70,
+        "time":  "2025-10-01T23:41:22.0445112-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  71,
+        "time":  "2025-10-01T23:41:22.2035285-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  72,
+        "time":  "2025-10-01T23:41:22.3394835-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  73,
+        "time":  "2025-10-01T23:41:22.4961794-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  74,
+        "time":  "2025-10-01T23:41:22.6495892-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  75,
+        "time":  "2025-10-01T23:41:22.7907326-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  76,
+        "time":  "2025-10-01T23:41:22.9432153-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  77,
+        "time":  "2025-10-01T23:41:23.0901322-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  78,
+        "time":  "2025-10-01T23:41:23.2382193-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  79,
+        "time":  "2025-10-01T23:41:23.3768713-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  80,
+        "time":  "2025-10-01T23:41:23.5323288-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  81,
+        "time":  "2025-10-01T23:41:23.6880389-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  82,
+        "time":  "2025-10-01T23:41:23.8739884-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  83,
+        "time":  "2025-10-01T23:41:24.0257922-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  84,
+        "time":  "2025-10-01T23:41:24.1807994-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  85,
+        "time":  "2025-10-01T23:41:24.3202710-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  86,
+        "time":  "2025-10-01T23:41:24.4869917-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  87,
+        "time":  "2025-10-01T23:41:24.6586548-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  88,
+        "time":  "2025-10-01T23:41:24.7963028-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  89,
+        "time":  "2025-10-01T23:41:24.9222986-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  90,
+        "time":  "2025-10-01T23:41:25.0589868-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  91,
+        "time":  "2025-10-01T23:41:25.1994895-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  92,
+        "time":  "2025-10-01T23:41:25.3593623-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  93,
+        "time":  "2025-10-01T23:41:25.5089832-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  94,
+        "time":  "2025-10-01T23:41:25.6492782-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  95,
+        "time":  "2025-10-01T23:41:25.7880157-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  96,
+        "time":  "2025-10-01T23:41:25.9438584-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  97,
+        "time":  "2025-10-01T23:41:26.0894496-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  98,
+        "time":  "2025-10-01T23:41:26.2650830-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  99,
+        "time":  "2025-10-01T23:41:26.4397301-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    },
+    {
+        "index":  100,
+        "time":  "2025-10-01T23:41:26.5894105-05:00",
+        "status":  "ERR",
+        "code":  401,
+        "resp":  "The remote server returned an error: (401) Unauthorized."
+    }
+]

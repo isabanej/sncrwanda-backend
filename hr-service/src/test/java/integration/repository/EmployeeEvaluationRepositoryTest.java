@@ -1,9 +1,11 @@
-package org.sncrwanda.hr.repository;
+package integration.repository;
 
 import org.junit.jupiter.api.Test;
+import org.sncrwanda.hr.HrApplication;
 import org.sncrwanda.hr.domain.EmployeeEvaluation;
+import org.sncrwanda.hr.repository.EmployeeEvaluationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
@@ -12,7 +14,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest(classes = HrApplication.class)
 @ActiveProfiles("test")
 class EmployeeEvaluationRepositoryTest {
     @Autowired EmployeeEvaluationRepository repo;

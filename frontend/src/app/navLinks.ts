@@ -25,7 +25,6 @@ export function buildPublicNavLinks(args: { roles?: string[]; username?: string;
     { label: 'Schedule', to: '/schedule', requiresRole: ['ADMIN', 'TEACHER', 'SUPER_ADMIN'] },
     { label: 'Guardians', to: '/guardians', requiresRole: ['ADMIN', 'TEACHER', 'SUPER_ADMIN'] },
     { label: 'Students', to: '/students', requiresRole: ['ADMIN', 'TEACHER', 'SUPER_ADMIN'] },
-    { label: 'Reports', to: '/reports', requiresRole: ['ADMIN', 'TEACHER', 'SUPER_ADMIN'] },
     // Administration only
     { label: 'Employees', to: '/employees', requiresRole: ['ADMIN', 'SUPER_ADMIN'] },
     { label: 'Ledger', to: '/ledger', requiresRole: ['ADMIN', 'SUPER_ADMIN'] },

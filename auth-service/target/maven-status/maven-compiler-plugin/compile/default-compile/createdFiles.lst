@@ -25,4 +25,6 @@ org\sncrwanda\auth\dto\ForgotPasswordRequest.class
 org\sncrwanda\auth\service\MailService.class
 org\sncrwanda\auth\config\DebugHashPrinter.class
 org\sncrwanda\auth\dto\UserResponse.class
+org\sncrwanda\auth\web\CachedBodyHttpServletRequest.class
 org\sncrwanda\auth\security\JwtUtil.class
+org\sncrwanda\auth\web\CachedBodyHttpServletRequest$1.class

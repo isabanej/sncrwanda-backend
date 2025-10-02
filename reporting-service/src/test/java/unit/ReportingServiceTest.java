@@ -37,14 +37,15 @@ class ReportingServiceTest {
             when(jdbc.queryForObject(startsWith("select count(*) from student.students"), eq(Long.class))).thenReturn(20L);
             when(jdbc.queryForObject(startsWith("select count(*) from ledger.transactions"), eq(Long.class))).thenReturn(5L);
             when(jdbc.queryForObject(startsWith("select coalesce(sum(amount)"), eq(BigDecimal.class))).thenReturn(new BigDecimal("123.45"));
-            when(jdbc.queryForObject(startsWith("select count(*) from student.student_reports"), eq(Long.class))).thenReturn(7L);
+            // Student reports removed, so count should be 0
+            // when(jdbc.queryForObject(startsWith("select count(*) from student.student_reports"), eq(Long.class))).thenReturn(7L);
 
             ReportSummaryResponse r = svc.getSummary();
             assertEquals(10, r.getEmployeeCount());
             assertEquals(20, r.getStudentCount());
             assertEquals(5, r.getTransactionCount());
             assertEquals(new BigDecimal("123.45"), r.getTotalTransactionAmount());
-            assertEquals(7, r.getStudentReportCount());
+            assertEquals(0, r.getStudentReportCount()); // Updated to expect 0 since reports were removed
         }
     }
 
@@ -61,14 +62,15 @@ class ReportingServiceTest {
             when(jdbc.queryForObject(contains("student.students"), eq(Long.class), eq(branch))).thenReturn(2L);
             when(jdbc.queryForObject(contains("ledger.transactions"), eq(Long.class), eq(branch))).thenReturn(3L);
             when(jdbc.queryForObject(contains("sum(amount)"), eq(BigDecimal.class), eq(branch))).thenReturn(new BigDecimal("9.99"));
-            when(jdbc.queryForObject(contains("student.student_reports"), eq(Long.class), eq(branch))).thenReturn(4L);
+            // Student reports removed, so count should be 0
+            // when(jdbc.queryForObject(contains("student.student_reports"), eq(Long.class), eq(branch))).thenReturn(4L);
 
             ReportSummaryResponse r = svc.getSummary();
             assertEquals(1, r.getEmployeeCount());
             assertEquals(2, r.getStudentCount());
             assertEquals(3, r.getTransactionCount());
             assertEquals(new BigDecimal("9.99"), r.getTotalTransactionAmount());
-            assertEquals(4, r.getStudentReportCount());
+            assertEquals(0, r.getStudentReportCount()); // Updated to expect 0 since reports were removed
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.sncrwanda.ledger.integration.jpa;
 
 import org.junit.jupiter.api.Test;
+import org.sncrwanda.ledger.LedgerApplication;
 import org.sncrwanda.ledger.domain.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

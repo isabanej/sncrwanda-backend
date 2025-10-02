@@ -23,8 +23,12 @@ describe('Guardian live search', () => {
       { id: 'g1', fullName: 'Janvier Alpha', phone: '078' },
       { id: 'g2', fullName: 'Jane Bravo', phone: '078' }
     ]
-    // Calls: list students, list guardians (initial), subsequent guardian searches (we reuse same data)
-    mockFetchSequence([students, guardians, guardians, guardians])
+    const needs = [
+      { code: 'special_education', label: 'Special Education' },
+      { code: 'medical_attention', label: 'Medical Attention' }
+    ]
+    // Calls: list students, list needs, list guardians (initial), subsequent guardian searches (we reuse same data)
+    mockFetchSequence([students, needs, guardians, guardians, guardians])
 
     render(<Providers><Students /></Providers>)
 
