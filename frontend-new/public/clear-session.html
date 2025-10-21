@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clear Session - SNC Rwanda</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 500px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    .info {
+      background: #f0f9ff;
+      border: 1px solid #0ea5e9;
+      border-radius: 4px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      text-align: left;
+    }
+    .info h3 {
+      margin-top: 0;
+      color: #0369a1;
+    }
+    .info ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+    .info li {
+      margin: 0.5rem 0;
+    }
+    .status {
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .status.found {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fbbf24;
+    }
+    .status.cleared {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+    button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 0.5rem;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #4338ca;
+    }
+    button.secondary {
+      background: #6b7280;
+    }
+    button.secondary:hover {
+      background: #4b5563;
+    }
+    .code {
+      background: #f3f4f6;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-family: monospace;
+      display: inline-block;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Session Management</h1>
+    
+    <div class="info">
+      <h3>Why am I auto-logged in?</h3>
+      <ul>
+        <li><strong>Token stored in browser:</strong> When you login, your session token is saved in localStorage</li>
+        <li><strong>Persists across refreshes:</strong> The token stays even when you refresh the page</li>
+        <li><strong>Auto-login:</strong> The app checks for the token on startup and logs you in automatically</li>
+      </ul>
+    </div>
+
+    <div id="status"></div>
+
+    <div style="margin-top: 2rem;">
+      <button onclick="clearSession()">🗑️ Clear Session & Logout</button>
+      <br>
+      <button class="secondary" onclick="checkSession()">🔍 Check Current Session</button>
+      <br>
+      <button class="secondary" onclick="goToLogin()">🔐 Go to Login Page</button>
+    </div>
+
+    <div class="info" style="margin-top: 2rem;">
+      <h3>Manual Clear (Browser Console):</h3>
+      <div class="code">localStorage.clear()</div>
+      <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+        Press <strong>F12</strong> → Console tab → Paste above command
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function checkSession() {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      const statusDiv = document.getElementById('status');
+      
+      if (token) {
+        let userInfo = 'Unknown user';
+        if (user) {
+          try {
+            const userData = JSON.parse(user);
+            userInfo = `${userData.username || 'Unknown'} (${userData.role || 'No role'})`;
+          } catch (e) {
+            userInfo = 'Invalid user data';
+          }
+        }
+        
+        statusDiv.className = 'status found';
+        statusDiv.innerHTML = `
+          <strong>⚠️ Active Session Found</strong><br>
+          Logged in as: ${userInfo}<br>
+          Token: ${token.substring(0, 20)}...
+        `;
+      } else {
+        statusDiv.className = 'status cleared';
+        statusDiv.innerHTML = '<strong>✅ No Active Session</strong><br>You are logged out';
+      }
+    }
+
+    function clearSession() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      const statusDiv = document.getElementById('status');
+      statusDiv.className = 'status cleared';
+      statusDiv.innerHTML = '<strong>✅ Session Cleared!</strong><br>You have been logged out. Click "Go to Login Page" to login again.';
+    }
+
+    function goToLogin() {
+      window.location.href = '/login';
+    }
+
+    // Check session on load
+    window.onload = checkSession;
+  </script>
+</body>
+</html>
