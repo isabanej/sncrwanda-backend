@@ -7,7 +7,9 @@ services:
     ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql:ro
+      # Mount the directory of init scripts into the container so Postgres can run each file.
+      # Use ./migrations which contains SQL files to execute on first initialization.
+      - ./migrations:/docker-entrypoint-initdb.d:ro
 
   ledger-service:
     image: ledger-service:latest
@@ -73,17 +75,17 @@ services:
     depends_on:
       - postgres
 
-  reporting-service:
-    image: reporting-service:latest
-    build:
-      context: ../reporting-service
-      dockerfile: Dockerfile
-    ports:
-      - "9096:9096"
-    environment:
-      - SERVER_PORT=9096
-    depends_on:
-      - postgres
+  # reporting-service:
+  #   image: reporting-service:latest
+  #   build:
+  #     context: ../reporting-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9096:9096"
+  #   environment:
+  #     - SERVER_PORT=9096
+  #   depends_on:
+  #     - postgres
 
 volumes:
   pgdata: {}

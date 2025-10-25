@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { canEditOrDelete } from '../utils/permissions';
 import { DataTable, type Column } from '../components/DataTable';
 import { SearchableSelect } from '../components/SearchableSelect';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import '../pages/Dashboard.css';
 
 export const Students = () => {
@@ -18,11 +19,18 @@ export const Students = () => {
   const [showForm, setShowForm] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'delete' | 'restore';
+    id: string;
+    name: string;
+  }>({ isOpen: false, type: 'restore', id: '', name: '' });
   const [formData, setFormData] = useState({
     guardianId: '',
     childFirstName: '',
     childLastName: '',
     childDob: '',
+    gender: '',
     hobbies: '',
   });
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
@@ -112,6 +120,7 @@ export const Students = () => {
         childFirstName: formData.childFirstName,
         childLastName: formData.childLastName,
         childDob: formData.childDob,
+        gender: (formData.gender as 'MALE' | 'FEMALE') || undefined,
         hobbies: formData.hobbies || undefined,
         needs: selectedNeeds.filter(n => n !== 'OTHER'),
         needsOtherText: showOtherInput ? otherNeedText : undefined,
@@ -131,6 +140,7 @@ export const Students = () => {
         childFirstName: '',
         childLastName: '',
         childDob: '',
+        gender: '',
         hobbies: '',
       });
       setSelectedNeeds([]);
@@ -149,6 +159,7 @@ export const Students = () => {
       childFirstName: student.childFirstName,
       childLastName: student.childLastName,
       childDob: student.childDob,
+      gender: student.gender || '',
       hobbies: student.hobbies || '',
     });
     setSelectedNeeds(student.needs || []);
@@ -167,6 +178,7 @@ export const Students = () => {
       childFirstName: '',
       childLastName: '',
       childDob: '',
+      gender: '',
       hobbies: '',
     });
     setSelectedNeeds([]);
@@ -197,10 +209,18 @@ export const Students = () => {
     
     console.log('Attempting to delete student:', student.childFirstName, student.childLastName, 'ID:', id);
     
-    const confirmDelete = confirm(`Are you sure you want to delete this student?\n\n${student.childFirstName} ${student.childLastName}`);
-    console.log('User confirmed deletion:', confirmDelete);
-    
-    if (!confirmDelete) return;
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'delete',
+      id,
+      name: `${student.childFirstName} ${student.childLastName}`
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'delete', id: '', name: '' });
     
     try {
       console.log('Calling API to delete student:', id);
@@ -226,6 +246,23 @@ export const Students = () => {
   };
   
   const handleRestore = async (id: string) => {
+    // Find the student to show their name in the confirmation
+    const student = students.find(s => s.id === id);
+    const studentName = student ? `${student.childFirstName} ${student.childLastName}` : 'this student';
+    
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'restore',
+      id,
+      name: studentName
+    });
+  };
+
+  const handleConfirmRestore = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' });
+    
     try {
       console.log('Attempting to restore student:', id);
       await studentAPI.restore(id);
@@ -359,6 +396,25 @@ export const Students = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.9375rem',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="">Select gender...</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Guardian *</label>
                 <SearchableSelect
                   options={guardians
@@ -449,29 +505,54 @@ export const Students = () => {
               label: 'First Name',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '12%',
             },
             {
               key: 'childLastName',
               label: 'Last Name',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '12%',
             },
             {
               key: 'childDob',
               label: 'Date of Birth',
               sortable: true,
               searchable: false,
-              width: '12%',
+              width: '10%',
               render: (value) => new Date(value).toLocaleDateString(),
+            },
+            {
+              key: 'childDob',
+              label: 'Age',
+              sortable: true,
+              searchable: false,
+              width: '6%',
+              render: (value) => {
+                const today = new Date();
+                const birthDate = new Date(value);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+                }
+                return age;
+              },
+            },
+            {
+              key: 'gender',
+              label: 'Gender',
+              sortable: true,
+              searchable: true,
+              width: '8%',
+              render: (value) => value ? (value === 'MALE' ? 'Male' : 'Female') : '-',
             },
             {
               key: 'guardianId',
               label: 'Guardian',
               sortable: true,
               searchable: true,
-              width: '18%',
+              width: '15%',
               render: (guardianId) => getGuardianName(guardianId),
             },
             {
@@ -521,7 +602,7 @@ export const Students = () => {
               label: 'Hobbies',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '20%',
               render: (value) => value || '-',
             },
           ] as Column<Student>[]}
@@ -569,6 +650,21 @@ export const Students = () => {
           emptyMessage={`No ${showDeleted ? 'deleted' : 'active'} students found. ${canEdit && !showDeleted ? 'Click "Add Student" to create one.' : ''}`}
         />
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.type === 'delete' ? 'Delete Student' : 'Restore Student'}
+        message={
+          confirmDialog.type === 'delete'
+            ? `Are you sure you want to delete ${confirmDialog.name}?\n\nThis will move the student to the deleted records.`
+            : `Are you sure you want to restore ${confirmDialog.name}?\n\nThis will move the record back to active students.`
+        }
+        confirmText={confirmDialog.type === 'delete' ? 'Delete' : 'Restore'}
+        cancelText="Cancel"
+        onConfirm={confirmDialog.type === 'delete' ? handleConfirmDelete : handleConfirmRestore}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' })}
+        type={confirmDialog.type === 'delete' ? 'danger' : 'info'}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { canEditOrDelete } from '../utils/permissions';
 import { PhoneInput } from '../components/PhoneInput';
 import { validateEmail, getEmailError } from '../utils/validation';
 import { DataTable, type Column } from '../components/DataTable';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import '../pages/Dashboard.css';
 
 export const Guardians = () => {
@@ -19,6 +20,12 @@ export const Guardians = () => {
   const [showDeleted, setShowDeleted] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'delete' | 'restore';
+    id: string;
+    name: string;
+  }>({ isOpen: false, type: 'restore', id: '', name: '' });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -137,10 +144,18 @@ export const Guardians = () => {
     
     console.log('Attempting to delete guardian:', guardian.firstName, guardian.lastName, 'ID:', id);
     
-    const confirmDelete = confirm(`Are you sure you want to delete this guardian?\n\n${guardian.firstName} ${guardian.lastName}`);
-    console.log('User confirmed deletion:', confirmDelete);
-    
-    if (!confirmDelete) return;
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'delete',
+      id,
+      name: `${guardian.firstName} ${guardian.lastName}`
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'delete', id: '', name: '' });
     
     try {
       console.log('Calling API to delete guardian:', id);
@@ -166,6 +181,23 @@ export const Guardians = () => {
   };
   
   const handleRestore = async (id: string) => {
+    // Find the guardian to show their name in the confirmation
+    const guardian = guardians.find(g => g.id === id);
+    const guardianName = guardian ? `${guardian.firstName} ${guardian.lastName}` : 'this guardian';
+    
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'restore',
+      id,
+      name: guardianName
+    });
+  };
+
+  const handleConfirmRestore = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' });
+    
     try {
       console.log('Attempting to restore guardian:', id);
       await guardianAPI.restore(id);
@@ -420,6 +452,21 @@ export const Guardians = () => {
           emptyMessage={`No ${showDeleted ? 'deleted' : 'active'} guardians found. ${canEdit && !showDeleted ? 'Click "Add Guardian" to create one.' : ''}`}
         />
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.type === 'delete' ? 'Delete Guardian' : 'Restore Guardian'}
+        message={
+          confirmDialog.type === 'delete'
+            ? `Are you sure you want to delete ${confirmDialog.name}?\n\nThis will move the guardian to the deleted records.`
+            : `Are you sure you want to restore ${confirmDialog.name}?\n\nThis will move the record back to active guardians.`
+        }
+        confirmText={confirmDialog.type === 'delete' ? 'Delete' : 'Restore'}
+        cancelText="Cancel"
+        onConfirm={confirmDialog.type === 'delete' ? handleConfirmDelete : handleConfirmRestore}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' })}
+        type={confirmDialog.type === 'delete' ? 'danger' : 'info'}
+      />
     </div>
   );
 };

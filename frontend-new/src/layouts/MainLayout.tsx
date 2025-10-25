@@ -21,8 +21,10 @@ export const MainLayout = () => {
     { path: '/guardians', label: 'Guardians', icon: '👥' },
     { path: '/students', label: 'Students', icon: '🎓' },
     { path: '/employees', label: 'Employees', icon: '👔' },
-    { path: '/ledger', label: 'Ledger', icon: '💰' },
-    { path: '/admin/users', label: 'User Management', icon: '⚙️' },
+    { path: '/ledger/dashboard', label: 'Financial Dashboard', icon: '📈' },
+    { path: '/cashflow', label: 'Cashflow', icon: '💵' },
+    { path: '/settings', label: 'Settings', icon: '⚙️' },
+    { path: '/admin/users', label: 'User Management', icon: '🔐' },
     { path: '/guardian-portal', label: 'Guardian Portal', icon: '🏠' },
   ];
 

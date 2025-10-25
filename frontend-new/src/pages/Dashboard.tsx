@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { employeeAPI, studentAPI, guardianAPI, ledgerAPI } from '../services/api';
 import './Dashboard.css';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const { formatCurrency } = useSettings();
   const [stats, setStats] = useState({
     guardians: 0,
     students: 0,
@@ -85,7 +87,7 @@ export const Dashboard = () => {
             <div className="stat-value" style={{ 
               color: stats.balance >= 0 ? '#10b981' : '#ef4444' 
             }}>
-              {loading ? '-' : `$${stats.balance.toLocaleString()}`}
+              {loading ? '-' : formatCurrency(stats.balance)}
             </div>
           </div>
         </div>

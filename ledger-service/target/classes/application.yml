@@ -3,8 +3,14 @@ server:
 spring:
   application:
     name: ledger-service
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=ledger
+    # Use the Docker service name for Postgres; database created by compose as 'sncrwanda'
+    url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=ledger
     username: postgres
     password: postgres
   jpa:
@@ -12,6 +18,7 @@ spring:
       ddl-auto: update
     properties:
       hibernate.format_sql: true
+      hibernate.default_schema: ledger
 
 management:
   endpoints:

@@ -1,10 +1,10 @@
 server:
-  port: 8084
+  port: 9095
 spring:
   application:
     name: student-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=students
+    url: jdbc:postgresql://localhost:5432/sncrwanda?currentSchema=students
     username: postgres
     password: postgres
   jpa:
@@ -12,6 +12,7 @@ spring:
       ddl-auto: update
     properties:
       hibernate.format_sql: true
+      hibernate.default_schema: students
 
 management:
   endpoints:

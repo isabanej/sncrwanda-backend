@@ -9,10 +9,23 @@
 }
 
 :root {
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light Mode (Default) */
+:root,
+[data-theme="light"] {
   /* Colors */
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-light: #eef2ff;
+  --primary-color: #3b82f6;
   --background: #f6f7f9;
   --white: #ffffff;
   --gray-50: #f9fafb;
@@ -31,23 +44,63 @@
   --danger-hover: #dc2626;
   --warning: #f59e0b;
   --info: #3b82f6;
-
-  /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Semantic Colors */
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --hover-bg: #f3f4f6;
+  --info-bg: #eff6ff;
+  --info-color: #3b82f6;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  /* Colors - Dark Mode */
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-light: #1e1b4b;
+  --primary-color: #60a5fa;
+  --background: #0f172a;
+  --white: #1e293b;
+  --gray-50: #1e293b;
+  --gray-100: #334155;
+  --gray-200: #475569;
+  --gray-300: #64748b;
+  --gray-400: #94a3b8;
+  --gray-500: #cbd5e1;
+  --gray-600: #e2e8f0;
+  --gray-700: #f1f5f9;
+  --gray-800: #f8fafc;
+  --gray-900: #ffffff;
+  --success: #10b981;
+  --success-hover: #34d399;
+  --danger: #ef4444;
+  --danger-hover: #f87171;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  
+  /* Semantic Colors - Dark Mode */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --card-bg: #1e293b;
+  --input-bg: #0f172a;
+  --border-color: #334155;
+  --hover-bg: #334155;
+  --info-bg: #1e3a5f;
+  --info-color: #60a5fa;
 }
 
 body {
   font-family: var(--font-family);
   background: var(--background);
-  color: var(--gray-900);
+  color: var(--text-primary);
   line-height: 1.6;
   margin: 0;
   min-width: 320px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Typography */

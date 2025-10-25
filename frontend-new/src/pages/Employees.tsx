@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { employeeAPI } from '../services/api';
 import type { Employee } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { canEditOrDelete } from '../utils/permissions';
 import { PhoneInput } from '../components/PhoneInput';
 import { validateEmail, getEmailError } from '../utils/validation';
 import { DataTable, type Column } from '../components/DataTable';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import '../pages/Dashboard.css';
 
 export const Employees = () => {
   const { user } = useAuth();
+  const { formatCurrency } = useSettings();
   const canEdit = canEditOrDelete(user);
   
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -19,10 +22,17 @@ export const Employees = () => {
   const [showDeleted, setShowDeleted] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'delete' | 'restore';
+    id: string;
+    name: string;
+  }>({ isOpen: false, type: 'restore', id: '', name: '' });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     dob: '',
+    gender: '',
     address: '',
     position: '',
     salary: '',
@@ -78,6 +88,7 @@ export const Employees = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         dob: formData.dob,
+        gender: (formData.gender as 'MALE' | 'FEMALE') || undefined,
         address: formData.address,
         position: formData.position,
         salary: parseFloat(formData.salary),
@@ -101,6 +112,7 @@ export const Employees = () => {
         firstName: '',
         lastName: '',
         dob: '',
+        gender: '',
         address: '',
         position: '',
         salary: '',
@@ -119,6 +131,7 @@ export const Employees = () => {
       firstName: employee.firstName,
       lastName: employee.lastName,
       dob: employee.dob,
+      gender: employee.gender || '',
       address: employee.address,
       position: employee.position,
       salary: employee.salary.toString(),
@@ -136,6 +149,7 @@ export const Employees = () => {
       firstName: '',
       lastName: '',
       dob: '',
+      gender: '',
       address: '',
       position: '',
       salary: '',
@@ -154,10 +168,18 @@ export const Employees = () => {
     
     console.log('Attempting to delete employee:', employee.firstName, employee.lastName, 'ID:', id);
     
-    const confirmDelete = confirm(`Are you sure you want to delete this employee?\n\n${employee.firstName} ${employee.lastName}`);
-    console.log('User confirmed deletion:', confirmDelete);
-    
-    if (!confirmDelete) return;
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'delete',
+      id,
+      name: `${employee.firstName} ${employee.lastName}`
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'delete', id: '', name: '' });
     
     try {
       console.log('Calling API to delete employee:', id);
@@ -183,6 +205,23 @@ export const Employees = () => {
   };
   
   const handleRestore = async (id: string) => {
+    // Find the employee to show their name in the confirmation
+    const employee = employees.find(e => e.id === id);
+    const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'this employee';
+    
+    // Show custom confirmation dialog
+    setConfirmDialog({
+      isOpen: true,
+      type: 'restore',
+      id,
+      name: employeeName
+    });
+  };
+
+  const handleConfirmRestore = async () => {
+    const { id } = confirmDialog;
+    setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' });
+    
     try {
       console.log('Attempting to restore employee:', id);
       await employeeAPI.restore(id);
@@ -311,6 +350,25 @@ export const Employees = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.9375rem',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="">Select gender...</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Position *</label>
                 <input
                   type="text"
@@ -387,44 +445,60 @@ export const Employees = () => {
               label: 'First Name',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '12%',
             },
             {
               key: 'lastName',
               label: 'Last Name',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '12%',
             },
             {
               key: 'position',
               label: 'Position',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '12%',
             },
             {
               key: 'dob',
               label: 'DOB',
               sortable: true,
               searchable: false,
-              width: '10%',
+              width: '8%',
               render: (value) => new Date(value).toLocaleDateString(),
+            },
+            {
+              key: 'gender',
+              label: 'Gender',
+              sortable: true,
+              searchable: true,
+              width: '8%',
+              render: (value) => value ? (value === 'MALE' ? 'Male' : 'Female') : '-',
+            },
+            {
+              key: 'address',
+              label: 'Address',
+              sortable: true,
+              searchable: true,
+              width: '13%',
+              render: (value) => value || '-',
             },
             {
               key: 'salary',
               label: 'Salary',
               sortable: true,
               searchable: false,
-              width: '12%',
-              render: (value) => `$${value.toLocaleString()}`,
+              width: '10%',
+              render: (value) => formatCurrency(value),
             },
             {
               key: 'phone',
               label: 'Phone',
               sortable: true,
               searchable: true,
-              width: '12%',
+              width: '10%',
               render: (value) => value || '-',
             },
             {
@@ -432,7 +506,7 @@ export const Employees = () => {
               label: 'Email',
               sortable: true,
               searchable: true,
-              width: '15%',
+              width: '13%',
               render: (value) => value || '-',
             },
             {
@@ -441,11 +515,20 @@ export const Employees = () => {
               sortable: true,
               searchable: false,
               width: '8%',
-              render: (active) => (
-                <span className={`badge ${active ? 'badge-success' : 'badge-danger'}`}>
-                  {active ? 'Active' : 'Inactive'}
-                </span>
-              ),
+              render: (active, emp) => {
+                if (emp.isDeleted) {
+                  return (
+                    <span className="badge badge-danger">
+                      DELETED
+                    </span>
+                  );
+                }
+                return (
+                  <span className={`badge ${active ? 'badge-success' : 'badge-danger'}`}>
+                    {active ? 'ACTIVE' : 'INACTIVE'}
+                  </span>
+                );
+              },
             },
           ] as Column<Employee>[]}
           actions={(emp) => (
@@ -492,6 +575,21 @@ export const Employees = () => {
           emptyMessage={`No ${showDeleted ? 'deleted' : 'active'} employees found. ${canEdit && !showDeleted ? 'Click "Add Employee" to create one.' : ''}`}
         />
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.type === 'delete' ? 'Delete Employee' : 'Restore Employee'}
+        message={
+          confirmDialog.type === 'delete'
+            ? `Are you sure you want to delete ${confirmDialog.name}?\n\nThis will move the employee to the deleted records.`
+            : `Are you sure you want to restore ${confirmDialog.name}?\n\nThis will move the record back to active employees.`
+        }
+        confirmText={confirmDialog.type === 'delete' ? 'Delete' : 'Restore'}
+        cancelText="Cancel"
+        onConfirm={confirmDialog.type === 'delete' ? handleConfirmDelete : handleConfirmRestore}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: 'restore', id: '', name: '' })}
+        type={confirmDialog.type === 'delete' ? 'danger' : 'info'}
+      />
     </div>
   );
 };

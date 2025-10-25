@@ -44,6 +44,7 @@ export interface Student {
   childFirstName: string;
   childLastName: string;
   childDob: string;
+  gender?: 'MALE' | 'FEMALE';
   hobbies?: string;
   needs?: string[];
   needsOtherText?: string;
@@ -57,6 +58,7 @@ export interface StudentRequest {
   childFirstName: string;
   childLastName: string;
   childDob: string;
+  gender?: 'MALE' | 'FEMALE';
   hobbies?: string;
   needs?: string[];
   needsOtherText?: string;
@@ -82,6 +84,7 @@ export interface Employee {
   firstName: string;
   lastName: string;
   dob: string;
+  gender?: 'MALE' | 'FEMALE';
   address: string;
   position: string;
   salary: number;
