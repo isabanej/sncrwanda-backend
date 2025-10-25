@@ -8,6 +8,8 @@ public class Guardian {
   @Column(nullable=false) private String firstName;
   @Column(nullable=false) private String lastName;
   @Column(nullable=false) private String phone;
+  @Enumerated(EnumType.STRING)
+  private Gender gender;
   private String email; private String address;
   @Column(nullable=false) private boolean isDeleted = false;
   @Column(nullable=false) private UUID orgId = UUID.fromString("00000000-0000-0000-0000-000000000001");

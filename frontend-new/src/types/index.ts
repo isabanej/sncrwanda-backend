@@ -71,6 +71,7 @@ export interface Guardian {
   firstName: string;
   lastName: string;
   phone: string;
+  gender?: 'MALE' | 'FEMALE';
   email?: string;
   address?: string;
   orgId: string;

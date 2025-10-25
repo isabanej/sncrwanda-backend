@@ -30,6 +30,7 @@ export const Guardians = () => {
     firstName: '',
     lastName: '',
     phone: '+250',
+    gender: '',
     email: '',
     address: '',
   });
@@ -82,6 +83,7 @@ export const Guardians = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
+        gender: (formData.gender as 'MALE' | 'FEMALE') || undefined,
         email: formData.email || undefined,
         address: formData.address || undefined,
       };
@@ -100,6 +102,7 @@ export const Guardians = () => {
         firstName: '',
         lastName: '',
         phone: '+250',
+        gender: '',
         email: '',
         address: '',
       });
@@ -108,13 +111,13 @@ export const Guardians = () => {
       console.error('Submit error:', err);
     }
   };
-  
   const handleEdit = (guardian: Guardian) => {
     setEditingId(guardian.id);
     setFormData({
       firstName: guardian.firstName,
       lastName: guardian.lastName,
       phone: guardian.phone,
+      gender: guardian.gender || '',
       email: guardian.email || '',
       address: guardian.address || '',
     });
@@ -129,6 +132,7 @@ export const Guardians = () => {
       firstName: '',
       lastName: '',
       phone: '+250',
+      gender: '',
       email: '',
       address: '',
     });
@@ -316,13 +320,25 @@ export const Guardians = () => {
                   required
                 />
               </div>
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group">
                 <label>Phone *</label>
                 <PhoneInput
                   value={formData.phone}
                   onChange={(value) => setFormData({ ...formData, phone: value })}
                   required
                 />
+              </div>
+              <div className="form-group">
+                <label>Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="form-control"
+                >
+                  <option value="">Select gender...</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
               </div>
               <div className="form-group">
                 <label>Email</label>
@@ -389,7 +405,15 @@ export const Guardians = () => {
               label: 'Phone',
               sortable: true,
               searchable: true,
-              width: '20%',
+              width: '18%',
+            },
+            {
+              key: 'gender',
+              label: 'Gender',
+              sortable: true,
+              searchable: true,
+              width: '10%',
+              render: (value) => value ? (value === 'MALE' ? 'Male' : 'Female') : '-',
             },
             {
               key: 'email',

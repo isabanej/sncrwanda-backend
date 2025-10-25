@@ -400,14 +400,7 @@ export const Students = () => {
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.9375rem',
-                    backgroundColor: 'white'
-                  }}
+                  className="form-control"
                 >
                   <option value="">Select gender...</option>
                   <option value="MALE">Male</option>
