@@ -15,5 +15,5 @@ public class ExpenseRequest {
     private String receiptNumber;
     private String paymentMethod;
     private String vendorName;
-    private UUID recordedBy;
+    private String recordedBy; // Changed from UUID to String
 }

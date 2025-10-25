@@ -38,7 +38,7 @@ public class ExpenseService {
             String receiptNumber,
             String paymentMethod,
             String vendorName,
-            UUID recordedBy) {
+            String recordedBy) { // Changed from UUID to String
         
         // Validate period
         periodService.validatePeriodForEntry(periodId);

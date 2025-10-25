@@ -1,5 +1,7 @@
 package org.sncrwanda.ledger.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,12 +14,14 @@ import java.util.UUID;
 @Table(name = "student_fee_payments")
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class StudentFeePayment {
     
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "period_id", nullable = false)
     private CashflowPeriod period;
@@ -62,7 +66,7 @@ public class StudentFeePayment {
     private LocalDateTime recordedAt = LocalDateTime.now();
     
     @Column(name = "recorded_by")
-    private UUID recordedBy;
+    private String recordedBy;  // Changed from UUID to String to match auth user IDs
     
     @Column(name = "org_id", nullable = false)
     private UUID orgId = UUID.fromString("00000000-0000-0000-0000-000000000001");

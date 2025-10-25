@@ -36,7 +36,7 @@ public class StudentFeeService {
             LocalDate paymentDate,
             String paymentMethod,
             String receiptNumber,
-            UUID recordedBy) {
+            String recordedBy) {  // Changed from UUID to String
         
         // Validate period
         periodService.validatePeriodForEntry(periodId);
@@ -53,7 +53,7 @@ public class StudentFeeService {
         
         // Create payment record
         StudentFeePayment payment = new StudentFeePayment();
-        payment.setId(UUID.randomUUID());
+        // Don't set ID manually - let JPA @GeneratedValue handle it
         payment.setPeriod(period);
         payment.setStudentId(studentId);
         payment.setStudentName(studentName);

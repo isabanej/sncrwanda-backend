@@ -1,6 +1,7 @@
 package org.sncrwanda.ledger.repo;
 
 import org.sncrwanda.ledger.domain.CashflowPeriod;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,9 +44,10 @@ public interface CashflowPeriodRepo extends JpaRepository<CashflowPeriod, UUID> 
            "(p.year > :year OR (p.year = :year AND p.month > :month)) " +
            "AND p.orgId = :orgId " +
            "ORDER BY p.year, p.month")
-    Optional<CashflowPeriod> findNextPeriod(
+    List<CashflowPeriod> findNextPeriods(
         @Param("year") Integer year, 
         @Param("month") Integer month,
-        @Param("orgId") UUID orgId
+        @Param("orgId") UUID orgId,
+        Pageable pageable
     );
 }

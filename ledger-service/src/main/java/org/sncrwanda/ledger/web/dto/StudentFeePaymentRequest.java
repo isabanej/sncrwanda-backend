@@ -15,5 +15,5 @@ public class StudentFeePaymentRequest {
     private LocalDate paymentDate;
     private String paymentMethod;
     private String receiptNumber;
-    private UUID recordedBy;
+    private String recordedBy;  // Changed from UUID to String to accept auth user IDs
 }

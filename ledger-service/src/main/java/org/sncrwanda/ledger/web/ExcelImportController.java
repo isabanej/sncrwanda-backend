@@ -26,7 +26,7 @@ public class ExcelImportController {
     public ResponseEntity<Map<String, Object>> importExcelFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam UUID orgId,
-            @RequestParam UUID importedBy) {
+            @RequestParam String importedBy) { // Changed from UUID to String
         
         log.info("Received Excel import request for organization {}", orgId);
         

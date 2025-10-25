@@ -40,7 +40,7 @@ public class ExcelImportService {
      * Import historical cashflow data from Excel file
      */
     @Transactional
-    public Map<String, Object> importHistoricalData(MultipartFile file, UUID orgId, UUID importedBy) 
+    public Map<String, Object> importHistoricalData(MultipartFile file, UUID orgId, String importedBy) 
             throws IOException {
         
         log.info("Starting Excel import for organization {}", orgId);
@@ -260,7 +260,7 @@ public class ExcelImportService {
      * Import student fees from Revenue sheet
      */
     private int importStudentFees(Sheet sheet, Map<String, CashflowPeriod> periodsByMonth, 
-                                   List<String> months, UUID importedBy) {
+                                   List<String> months, String importedBy) { // Changed from UUID to String
         int count = 0;
         
         // Start from row 4 (row 3 is header, rows 1-2 are titles)
@@ -337,7 +337,7 @@ public class ExcelImportService {
      * Import expenses from Cashflow Statement sheet
      */
     private int importExpenses(Sheet sheet, Map<String, CashflowPeriod> periodsByMonth, 
-                               List<String> months, UUID importedBy) {
+                               List<String> months, String importedBy) { // Changed from UUID to String
         log.info("=== STARTING EXPENSE IMPORT ===");
         log.info("Sheet name: {}", sheet.getSheetName());
         log.info("Periods available: {}", periodsByMonth.size());
@@ -451,7 +451,7 @@ public class ExcelImportService {
      * Import petty cash IN/OUT transactions from Cashflow Statement sheet
      */
     private int importPettyCash(Sheet sheet, Map<String, CashflowPeriod> periodsByMonth, 
-                                List<String> months, UUID importedBy) {
+                                List<String> months, String importedBy) { // Changed from UUID to String
         int count = 0;
         
         // Find petty cash rows: Row 6 = Petty Cash(IN), Row 10 = Petty Cash(OUT)

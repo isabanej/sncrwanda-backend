@@ -6,6 +6,7 @@ import org.sncrwanda.ledger.domain.CashflowPeriod;
 import org.sncrwanda.ledger.domain.CashflowPeriod.PeriodStatus;
 import org.sncrwanda.ledger.dto.CashflowPeriodWithTotalsDTO;
 import org.sncrwanda.ledger.repo.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -171,18 +172,27 @@ public class CashflowPeriodService {
         CashflowPeriod period = periodRepo.findById(periodId)
             .orElseThrow(() -> new IllegalArgumentException("Period not found: " + periodId));
 
-        BigDecimal beginningCash = period.getBeginningCash();
+        BigDecimal beginningCash = period.getBeginningCash() != null ? period.getBeginningCash() : BigDecimal.ZERO;
         
-        // Calculate total cash IN
+        // Calculate total cash IN/OUT (repository queries use COALESCE but add null safety)
         BigDecimal studentFees = feePaymentRepo.calculateTotalForPeriod(periodId);
+        if (studentFees == null) studentFees = BigDecimal.ZERO;
+        
         BigDecimal expenses = expenseRepo.calculateTotalForPeriod(periodId);
+        if (expenses == null) expenses = BigDecimal.ZERO;
+        
         BigDecimal payroll = payrollRepo.calculateTotalPayrollForPeriod(periodId);
+        if (payroll == null) payroll = BigDecimal.ZERO;
         
         // Get petty cash net (IN - OUT)
         BigDecimal pettyCashIn = pettyCashRepo.calculateTotalByType(periodId, 
             org.sncrwanda.ledger.domain.PettyCashTransaction.TransactionType.IN);
+        if (pettyCashIn == null) pettyCashIn = BigDecimal.ZERO;
+        
         BigDecimal pettyCashOut = pettyCashRepo.calculateTotalByType(periodId, 
             org.sncrwanda.ledger.domain.PettyCashTransaction.TransactionType.OUT);
+        if (pettyCashOut == null) pettyCashOut = BigDecimal.ZERO;
+        
         BigDecimal pettyCashNet = pettyCashIn.subtract(pettyCashOut);
         
         // Ending cash = Beginning + StudentFees + PettyCashNet - Expenses - Payroll
@@ -207,11 +217,11 @@ public class CashflowPeriodService {
      * Update next period's beginning cash when current period's ending cash changes
      */
     private void updateNextPeriodBeginningCash(CashflowPeriod period) {
-        Optional<CashflowPeriod> nextPeriod = periodRepo.findNextPeriod(
-            period.getYear(), period.getMonth(), period.getOrgId());
+        List<CashflowPeriod> nextPeriods = periodRepo.findNextPeriods(
+            period.getYear(), period.getMonth(), period.getOrgId(), PageRequest.of(0, 1));
         
-        if (nextPeriod.isPresent()) {
-            CashflowPeriod next = nextPeriod.get();
+        if (!nextPeriods.isEmpty()) {
+            CashflowPeriod next = nextPeriods.get(0);
             next.setBeginningCash(period.getEndingCash());
             // JPA @PreUpdate will handle lastUpdated automatically
             periodRepo.save(next);

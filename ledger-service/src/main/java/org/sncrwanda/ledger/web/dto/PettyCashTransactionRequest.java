@@ -16,5 +16,5 @@ public class PettyCashTransactionRequest {
     private String description;
     private String receiptNumber;
     private String handledBy;
-    private UUID recordedBy;
+    private String recordedBy; // Changed from UUID to String
 }

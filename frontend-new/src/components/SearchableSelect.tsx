@@ -14,6 +14,7 @@ interface SearchableSelectProps {
   required?: boolean;
   disabled?: boolean;
   emptyMessage?: string;
+  name?: string;
 }
 
 export const SearchableSelect = ({
@@ -23,7 +24,8 @@ export const SearchableSelect = ({
   placeholder = 'Select an option',
   required = false,
   disabled = false,
-  emptyMessage = 'No options available'
+  emptyMessage = 'No options available',
+  name
 }: SearchableSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +96,9 @@ export const SearchableSelect = ({
 
   return (
     <div className="searchable-select" ref={dropdownRef}>
+      {/* Hidden input for form submission */}
+      {name && <input type="hidden" name={name} value={value} />}
+      
       <button
         type="button"
         className={`select-button ${isOpen ? 'open' : ''} ${!value ? 'placeholder' : ''}`}

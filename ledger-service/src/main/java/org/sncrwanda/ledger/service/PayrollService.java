@@ -44,7 +44,7 @@ public class PayrollService {
             BigDecimal deductions,
             String paymentMethod,
             LocalDate paymentDate,
-            UUID recordedBy) {
+            String recordedBy) { // Changed from UUID to String
         
         // Validate period
         periodService.validatePeriodForEntry(periodId);

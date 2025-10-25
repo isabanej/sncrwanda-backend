@@ -13,5 +13,5 @@ public class PayrollRequest {
     private BigDecimal deductions;
     private String paymentMethod;
     private LocalDate paymentDate;
-    private UUID recordedBy;
+    private String recordedBy; // Changed from UUID to String
 }

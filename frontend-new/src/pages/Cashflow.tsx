@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { cashflow } from '../services/cashflow';
 import type { CashflowPeriod, StudentFeePayment, StaffPayroll, CashflowExpense, PettyCashTransaction, ExpenseCategory } from '../services/cashflow';
 import { studentAPI, employeeAPI } from '../services/api';
+import { SearchableSelect } from '../components/SearchableSelect';
+import { Dialog } from '../components/Dialog';
 import './Cashflow.css';
 
 export const Cashflow = () => {
@@ -27,6 +29,71 @@ export const Cashflow = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'fee' | 'payroll' | 'expense' | 'petty-cash' | null>(null);
   const [showImportMessage, setShowImportMessage] = useState(false);
+
+  // Form states
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
+  // Dialog state
+  const [dialog, setDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const showDialog = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
+    setDialog({ isOpen: true, type, title, message });
+  };
+
+  const closeDialog = () => {
+    setDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const getErrorMessage = (error: any, action: string): string => {
+    // Check if there's a specific error message from the server
+    if (error.response?.data?.error) {
+      return error.response.data.error;
+    }
+
+    // Handle different HTTP status codes
+    const status = error.response?.status;
+    switch (status) {
+      case 400:
+        return `Invalid data provided. Please check all fields and try again.`;
+      case 401:
+        return `Your session has expired. Please log in again to continue.`;
+      case 403:
+        return `You don't have permission to perform this action. Please contact your administrator.`;
+      case 404:
+        return `The requested resource was not found. Please refresh the page and try again.`;
+      case 409:
+        return `This action conflicts with existing data. The record may already exist.`;
+      case 422:
+        return `The data provided is invalid. Please verify all required fields are filled correctly.`;
+      case 500:
+        return `We encountered a server error while ${action}. Please try again in a few moments. If the problem persists, contact technical support.`;
+      case 502:
+      case 503:
+        return `The service is temporarily unavailable. Please try again in a few minutes.`;
+      case 504:
+        return `The request timed out. Please check your internet connection and try again.`;
+      default:
+        if (error.message?.includes('Network Error') || error.message?.includes('network')) {
+          return `Unable to connect to the server. Please check your internet connection and try again.`;
+        }
+        if (error.message) {
+          return `An error occurred: ${error.message}`;
+        }
+        return `An unexpected error occurred while ${action}. Please try again or contact support if the issue persists.`;
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -55,8 +122,10 @@ export const Cashflow = () => {
       setCategories(cats);
       setStudents(studs);
       setEmployees(emps);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load cashflow data:', error);
+      const errorMessage = getErrorMessage(error, 'loading cashflow data');
+      showDialog('error', 'Failed to Load Data', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -91,12 +160,18 @@ export const Cashflow = () => {
 
   const openModal = (type: 'fee' | 'payroll' | 'expense' | 'petty-cash') => {
     setModalType(type);
+    setSelectedStudentId('');
+    setSelectedEmployeeId('');
+    setReceiptFile(null);
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setModalType(null);
+    setSelectedStudentId('');
+    setSelectedEmployeeId('');
+    setReceiptFile(null);
   };
 
   const handleSubmitFee = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -105,10 +180,16 @@ export const Cashflow = () => {
     const formData = new FormData(form);
 
     try {
+      const studentId = formData.get('studentId') as string;
+      const student = students.find(s => s.id === studentId);
+      const studentName = student ? `${student.childFirstName} ${student.childLastName}` : '';
+
+      // Note: Receipt file upload would need backend support to handle file uploads
+      // For now, we'll store the receipt number as entered
       await cashflow.recordFeePayment({
         periodId: selectedPeriod!.id,
-        studentId: formData.get('studentId') as string,
-        studentName: students.find(s => s.id === formData.get('studentId'))?.name || '',
+        studentId,
+        studentName,
         feeType: formData.get('feeType') as string,
         amountPaid: parseFloat(formData.get('amountPaid') as string),
         paymentDate: formData.get('paymentDate') as string,
@@ -117,11 +198,12 @@ export const Cashflow = () => {
         recordedBy: String(user?.id || ''),
       });
 
-      alert('Fee payment recorded successfully!');
+      showDialog('success', 'Success', 'Fee payment recorded successfully!');
       closeModal();
       loadPeriodData(selectedPeriod!.id);
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.error || error.message}`);
+      const errorMessage = getErrorMessage(error, 'recording the fee payment');
+      showDialog('error', 'Failed to Record Payment', errorMessage);
     }
   };
 
@@ -141,11 +223,12 @@ export const Cashflow = () => {
         recordedBy: String(user?.id || ''),
       });
 
-      alert('Payroll recorded successfully!');
+      showDialog('success', 'Success', 'Payroll recorded successfully!');
       closeModal();
       loadPeriodData(selectedPeriod!.id);
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.error || error.message}`);
+      const errorMessage = getErrorMessage(error, 'recording the payroll');
+      showDialog('error', 'Failed to Record Payroll', errorMessage);
     }
   };
 
@@ -167,11 +250,12 @@ export const Cashflow = () => {
         recordedBy: String(user?.id || ''),
       });
 
-      alert('Expense recorded successfully!');
+      showDialog('success', 'Success', 'Expense recorded successfully!');
       closeModal();
       loadPeriodData(selectedPeriod!.id);
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.error || error.message}`);
+      const errorMessage = getErrorMessage(error, 'recording the expense');
+      showDialog('error', 'Failed to Record Expense', errorMessage);
     }
   };
 
@@ -193,19 +277,19 @@ export const Cashflow = () => {
         recordedBy: String(user?.id || ''),
       });
 
-      alert('Petty cash transaction recorded successfully!');
+      showDialog('success', 'Success', 'Petty cash transaction recorded successfully!');
       closeModal();
       loadPeriodData(selectedPeriod!.id);
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.error || error.message}`);
+      const errorMessage = getErrorMessage(error, 'recording the petty cash transaction');
+      showDialog('error', 'Failed to Record Transaction', errorMessage);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -551,12 +635,19 @@ export const Cashflow = () => {
             <form onSubmit={handleSubmitFee}>
               <div className="form-group">
                 <label>Student *</label>
-                <select name="studentId" className="form-control" required>
-                  <option value="">Select student...</option>
-                  {students.filter(s => !s.isDeleted).map(student => (
-                    <option key={student.id} value={student.id}>{student.name}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  name="studentId"
+                  options={students
+                    .filter(s => !s.isDeleted && !s.deleted)
+                    .map(student => ({
+                      value: student.id,
+                      label: `${student.childFirstName} ${student.childLastName}`
+                    }))}
+                  value={selectedStudentId}
+                  onChange={setSelectedStudentId}
+                  placeholder="Select student..."
+                  required
+                />
               </div>
               <div className="form-group">
                 <label>Fee Type *</label>
@@ -568,7 +659,7 @@ export const Cashflow = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label>Amount Paid (RWF) *</label>
+                <label>Amount Paid *</label>
                 <input type="number" name="amountPaid" className="form-control" required min="0" step="1" />
               </div>
               <div className="form-group">
@@ -586,7 +677,84 @@ export const Cashflow = () => {
               </div>
               <div className="form-group">
                 <label>Receipt Number *</label>
-                <input type="text" name="receiptNumber" className="form-control" required />
+                <input type="text" name="receiptNumber" className="form-control" required placeholder="Enter receipt number" />
+              </div>
+              <div className="form-group">
+                <label>Receipt Confirmation (Optional)</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    style={{ display: 'none' }}
+                    id="receipt-file-input"
+                  />
+                  <label
+                    htmlFor="receipt-file-input"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0.75rem',
+                      border: '2px dashed #cbd5e1',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      backgroundColor: '#f8fafc',
+                      transition: 'all 0.2s',
+                      minHeight: '60px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#eff6ff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.backgroundColor = '#f8fafc';
+                    }}
+                  >
+                    {receiptFile ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '1.25rem' }}>📄</span>
+                        <div style={{ flex: 1, textAlign: 'left' }}>
+                          <div style={{ fontWeight: 500, color: '#1e293b' }}>{receiptFile.name}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                            {(receiptFile.size / 1024).toFixed(1)} KB
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setReceiptFile(null);
+                          }}
+                          style={{
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '0.25rem 0.5rem',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📎</div>
+                        <div style={{ fontWeight: 500, color: '#475569' }}>Upload Receipt</div>
+                        <div style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                          Images, PDF, or Documents
+                        </div>
+                      </div>
+                    )}
+                  </label>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem' }}>
+                  Supported formats: JPG, PNG, PDF, DOC, DOCX (Max 5MB)
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
@@ -607,19 +775,26 @@ export const Cashflow = () => {
             <form onSubmit={handleSubmitPayroll}>
               <div className="form-group">
                 <label>Employee *</label>
-                <select name="employeeId" className="form-control" required>
-                  <option value="">Select employee...</option>
-                  {employees.filter(e => e.active).map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name} - {emp.position}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  name="employeeId"
+                  options={employees
+                    .filter(e => !e.isDeleted)
+                    .map(emp => ({
+                      value: emp.id,
+                      label: `${emp.firstName} ${emp.lastName} - ${emp.position}`
+                    }))}
+                  value={selectedEmployeeId}
+                  onChange={setSelectedEmployeeId}
+                  placeholder="Select employee..."
+                  required
+                />
               </div>
               <div className="form-group">
-                <label>Bonuses (RWF)</label>
+                <label>Bonuses</label>
                 <input type="number" name="bonuses" className="form-control" min="0" step="1" defaultValue="0" />
               </div>
               <div className="form-group">
-                <label>Deductions (RWF)</label>
+                <label>Deductions</label>
                 <input type="number" name="deductions" className="form-control" min="0" step="1" defaultValue="0" />
               </div>
               <div className="form-group">
@@ -662,7 +837,7 @@ export const Cashflow = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label>Amount (RWF) *</label>
+                <label>Amount *</label>
                 <input type="number" name="amount" className="form-control" required min="0" step="1" />
               </div>
               <div className="form-group">
@@ -717,7 +892,7 @@ export const Cashflow = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label>Amount (RWF) *</label>
+                <label>Amount *</label>
                 <input type="number" name="amount" className="form-control" required min="0" step="1" />
               </div>
               <div className="form-group">
@@ -894,6 +1069,15 @@ export const Cashflow = () => {
           </div>
         </div>
       )}
+
+      {/* Dialog Component */}
+      <Dialog
+        isOpen={dialog.isOpen}
+        onClose={closeDialog}
+        type={dialog.type}
+        title={dialog.title}
+        message={dialog.message}
+      />
     </div>
   );
 };
@@ -920,10 +1104,9 @@ const CashflowStatement = ({ periodId }: { periodId: string }) => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 

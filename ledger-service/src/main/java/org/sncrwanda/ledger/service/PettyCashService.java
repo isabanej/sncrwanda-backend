@@ -40,7 +40,7 @@ public class PettyCashService {
             String description,
             String receiptNumber,
             String handledBy,
-            UUID recordedBy) {
+            String recordedBy) { // Changed from UUID to String
         
         // Validate period
         periodService.validatePeriodForEntry(periodId);

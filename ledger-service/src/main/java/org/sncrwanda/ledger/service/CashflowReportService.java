@@ -215,14 +215,14 @@ public class CashflowReportService {
         validation.put("valid", calculatedEnding.compareTo(period.getEndingCash()) == 0);
         
         // Check if next period's beginning matches this ending
-        Optional<CashflowPeriod> nextPeriod = periodRepo.findNextPeriod(
-            period.getYear(), period.getMonth(), period.getOrgId());
+        List<CashflowPeriod> nextPeriods = periodRepo.findNextPeriods(
+            period.getYear(), period.getMonth(), period.getOrgId(), org.springframework.data.domain.PageRequest.of(0, 1));
         
-        if (nextPeriod.isPresent()) {
-            boolean cascadeValid = nextPeriod.get().getBeginningCash()
+        if (!nextPeriods.isEmpty()) {
+            boolean cascadeValid = nextPeriods.get(0).getBeginningCash()
                 .compareTo(period.getEndingCash()) == 0;
             validation.put("cascadeValid", cascadeValid);
-            validation.put("nextPeriodBeginning", nextPeriod.get().getBeginningCash());
+            validation.put("nextPeriodBeginning", nextPeriods.get(0).getBeginningCash());
         } else {
             validation.put("cascadeValid", true); // No next period to validate
             validation.put("nextPeriodBeginning", null);
