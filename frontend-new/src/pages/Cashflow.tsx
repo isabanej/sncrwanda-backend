@@ -213,6 +213,7 @@ export const Cashflow = () => {
     const badges = {
       OPEN: { class: 'badge-success', text: 'Open' },
       LATE_ENTRY_PERIOD: { class: 'badge-warning', text: 'Late Entry Period' },
+      CLOSED: { class: 'badge-secondary', text: 'Closed' },
       LOCKED: { class: 'badge-danger', text: 'Locked' },
     };
     const badge = badges[status as keyof typeof badges] || { class: 'badge-secondary', text: status };
@@ -222,6 +223,19 @@ export const Cashflow = () => {
   if (loading) {
     return <div className="page-container"><div className="loading">Loading...</div></div>;
   }
+
+  // Group periods by year
+  const periodsByYear = periods.reduce((acc, period) => {
+    const year = period.periodName.split(' ')[1]; // Extract year from "Jan 2025"
+    if (!acc[year]) {
+      acc[year] = [];
+    }
+    acc[year].push(period);
+    return acc;
+  }, {} as Record<string, CashflowPeriod[]>);
+
+  // Sort years descending
+  const sortedYears = Object.keys(periodsByYear).sort((a, b) => parseInt(b) - parseInt(a));
 
   return (
     <div className="page-container">
@@ -242,10 +256,14 @@ export const Cashflow = () => {
               setSelectedPeriod(period || null);
             }}
           >
-            {periods.map(period => (
-              <option key={period.id} value={period.id}>
-                {period.periodName} - {getStatusBadge(period.status).props.children}
-              </option>
+            {sortedYears.map(year => (
+              <optgroup key={year} label={year}>
+                {periodsByYear[year].map(period => (
+                  <option key={period.id} value={period.id}>
+                    {period.periodName} - {getStatusBadge(period.status).props.children}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
